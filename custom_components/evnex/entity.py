@@ -96,8 +96,10 @@ class EvnexChargePointConnectorEntity(EvnexChargerEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the org."""
         return DeviceInfo(
+            name='Connector',
             configuration_url="https://evnex.io",
             identifiers={(DOMAIN, f'{self.connector_brief.evseId}')},
             manufacturer=NAME,
             model=self.connector_brief.connectorType,
+            via_device=(DOMAIN, f'{self.charger_id}')
         )

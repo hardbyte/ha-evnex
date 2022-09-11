@@ -6,7 +6,7 @@
   "version": "0.1.0",
   "documentation": "https://github.com/hardbyte/ha-evnex",
   "requirements": [
-    "evnex==0.2.3"
+    "evnex==0.2.4"
   ],
   "codeowners": [
     "@hardbyte"

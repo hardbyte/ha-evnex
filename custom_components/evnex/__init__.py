@@ -136,7 +136,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         try:
             _LOGGER.info("Getting evnex user detail")
+
             account: EvnexUserDetail = await evnex_client.get_user_detail()
+
             persist_evnex_auth_tokens(hass, entry, evnex_client.id_token, evnex_client.refresh_token,
                                       evnex_client.access_token)
 
@@ -164,7 +166,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     data['charge_point_transactions'][charge_point.id] = charge_point_transactions
 
             return data
-        except HTTPStatusError:
+        except NotAuthorizedException:
             if not is_retry:
                 _LOGGER.warning(
                     "EVNEX Session Token is invalid, attempting to re-login"

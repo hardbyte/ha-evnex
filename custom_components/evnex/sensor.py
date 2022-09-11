@@ -41,13 +41,17 @@ class EvnexOrgWidePowerUsageSensorToday(EvnexOrgEntity, SensorEntity):
         native_unit_of_measurement='Wh',
         icon="mdi:lightning-bolt-circle",
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
     )
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
         return self.coordinator.data['org_insights'][self.org_id][-1].powerUsage
+
+    @property
+    def last_reset(self):
+        return self.coordinator.data['org_insights'][self.org_id][-1].startDate
 
 
 class EvnexOrgWideChargeSessionsCountSensor(EvnexOrgEntity, SensorEntity):
@@ -57,7 +61,7 @@ class EvnexOrgWideChargeSessionsCountSensor(EvnexOrgEntity, SensorEntity):
         name="Charger sessions today",
         native_unit_of_measurement='sessions',
         icon="mdi:repeat_one",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
     )
 
     @property
@@ -67,7 +71,6 @@ class EvnexOrgWideChargeSessionsCountSensor(EvnexOrgEntity, SensorEntity):
 
     @property
     def last_reset(self):
-        """Return the state of the sensor."""
         return self.coordinator.data['org_insights'][self.org_id][-1].startDate
 
 
