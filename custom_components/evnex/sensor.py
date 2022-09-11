@@ -27,7 +27,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_system import UnitSystem
 
 from .entity import EvnexChargePointConnectorEntity, EvnexOrgEntity, EvnexChargerEntity
-from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
+from .const import DATA_COORDINATOR, DOMAIN
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,7 +120,8 @@ class EvnexChargePortConnectorVoltageSensor(EvnexChargePointConnectorEntity, Sen
     entity_description = SensorEntityDescription(
         key="connector_voltage",
         name="Voltage",
-        native_unit_of_measurement=SensorDeviceClass.VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement='V',
         icon="mdi:lightning-bolt",
         state_class=SensorStateClass.MEASUREMENT,
     )
@@ -136,7 +137,8 @@ class EvnexChargePortConnectorPowerSensor(EvnexChargePointConnectorEntity, Senso
     entity_description = SensorEntityDescription(
         key="connector_power",
         name="Metered Power",
-        native_unit_of_measurement=SensorDeviceClass.POWER,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement='W',
         icon="mdi:transmission-tower",
         state_class=SensorStateClass.MEASUREMENT,
     )
@@ -152,7 +154,8 @@ class EvnexChargePortConnectorFrequencySensor(EvnexChargePointConnectorEntity, S
     entity_description = SensorEntityDescription(
         key="connector_frequency",
         name="Metered Power Frequency",
-        native_unit_of_measurement=SensorDeviceClass.FREQUENCY,
+        device_class=SensorDeviceClass.FREQUENCY,
+        native_unit_of_measurement='Hz',
         state_class=SensorStateClass.MEASUREMENT,
     )
 
