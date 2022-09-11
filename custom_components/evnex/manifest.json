@@ -1,0 +1,16 @@
+{
+  "domain": "evnex",
+  "name": "Evnex EV Charger",
+  "issue_tracker": "https://github.com/hardbyte/ha-evnex/issues",
+  "config_flow": true,
+  "version": "0.1.0",
+  "documentation": "https://github.com/hardbyte/ha-evnex",
+  "requirements": [
+    "evnex==0.2.3"
+  ],
+  "codeowners": [
+    "@hardbyte"
+  ],
+  "iot_class": "cloud_polling",
+  "loggers": ["evnex"]
+}
