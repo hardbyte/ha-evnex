@@ -1,4 +1,4 @@
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration) [![Validation with hassfest](https://github.com/hardbyte/ha-evnex/actions/workflows/combined.yaml/badge.svg)](https://github.com/hardbyte/ha-evnex/actions/workflows/combined.yaml)
 
 # Evnex for Home Assistant
 
