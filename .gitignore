@@ -1,0 +1,3 @@
+.docker/data
+.idea
+*/__pycache__
