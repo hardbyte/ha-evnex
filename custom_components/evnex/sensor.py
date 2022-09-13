@@ -78,7 +78,7 @@ class EvnexChargerChargingStatusSensor(EvnexChargerEntity, SensorEntity):
 
     entity_description = SensorEntityDescription(
         key="charger_status",
-        name="Charging Status",
+        name="Charger Status",
         icon="mdi:lightning-bolt",
     )
 
@@ -105,7 +105,7 @@ class EvnexChargePortConnectorStatusSensor(EvnexChargePointConnectorEntity, Sens
 
     entity_description = SensorEntityDescription(
         key="connector_status",
-        name="Charging Status",
+        name="Connector Status",
         icon="mdi:lightning-bolt",
     )
 
@@ -153,16 +153,17 @@ class EvnexChargePortConnectorFrequencySensor(EvnexChargePointConnectorEntity, S
 
     entity_description = SensorEntityDescription(
         key="connector_frequency",
-        name="Metered Power Frequency",
+        name="Metered Frequency",
         device_class=SensorDeviceClass.FREQUENCY,
         native_unit_of_measurement='Hz',
+        icon="mdi:timer-outline",
         state_class=SensorStateClass.MEASUREMENT,
     )
 
     @property
     def native_value(self):
         brief = self.coordinator.data['connector_brief'][(self.charger_id, self.connector_id)]
-        return brief.meter.power
+        return brief.meter.frequency
 
 
 async def async_setup_entry(
@@ -193,5 +194,6 @@ async def async_setup_entry(
             entities.append(EvnexChargePortConnectorStatusSensor(coordinator, charger_id, connector_id))
             entities.append(EvnexChargePortConnectorVoltageSensor(coordinator, charger_id, connector_id))
             entities.append(EvnexChargePortConnectorPowerSensor(coordinator, charger_id, connector_id))
+            entities.append(EvnexChargePortConnectorFrequencySensor(coordinator, charger_id, connector_id))
 
     async_add_entities(entities)

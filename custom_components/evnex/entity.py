@@ -84,7 +84,7 @@ class EvnexChargerEntity(CoordinatorEntity):
 
 
 class EvnexChargePointConnectorEntity(EvnexChargerEntity):
-    """Base Entity for a specific evnex charger"""
+    """Base Entity for a specific evnex charger's connector"""
 
     def __init__(self, coordinator: DataUpdateCoordinator, charger_id: str, connector_id: str):
         """Initialize the Charge Point Connector entity."""
@@ -92,14 +92,14 @@ class EvnexChargePointConnectorEntity(EvnexChargerEntity):
         self.connector_id = connector_id
         self.connector_brief: EvnexChargePointConnector = self.connector_brief_by_id[connector_id]
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device_info of the org."""
-        return DeviceInfo(
-            name='Connector',
-            configuration_url="https://evnex.io",
-            identifiers={(DOMAIN, f'{self.connector_brief.evseId}')},
-            manufacturer=NAME,
-            model=self.connector_brief.connectorType,
-            via_device=(DOMAIN, f'{self.charger_id}')
-        )
+    # @property
+    # def device_info(self) -> DeviceInfo:
+    #     """Return the device_info of the org."""
+    #     return DeviceInfo(
+    #         name='Connector',
+    #         configuration_url="https://evnex.io",
+    #         identifiers={(DOMAIN, f'{self.connector_brief.evseId}')},
+    #         manufacturer=NAME,
+    #         model=self.connector_brief.connectorType,
+    #         via_device=(DOMAIN, f'{self.charger_id}')
+    #     )
