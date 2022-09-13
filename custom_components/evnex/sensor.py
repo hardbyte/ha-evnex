@@ -156,7 +156,7 @@ class EvnexChargePortConnectorFrequencySensor(EvnexChargePointConnectorEntity, S
         name="Metered Frequency",
         device_class=SensorDeviceClass.FREQUENCY,
         native_unit_of_measurement='Hz',
-        icon="mdi:timer-outline",
+        icon="mdi:sine-wave",
         state_class=SensorStateClass.MEASUREMENT,
     )
 
