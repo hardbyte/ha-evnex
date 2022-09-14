@@ -155,11 +155,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 data['org_insights'][org.id] = daily_insights
 
                 for charge_point in charge_points:
-                    for connector_brief in charge_point.connectors:
-                        data['connector_brief'][(charge_point.id, connector_brief.connectorId)] = connector_brief
 
                     _LOGGER.info(f"Getting evnex charge point data for {charge_point.name}")
                     charge_point_detail: EvnexChargePointDetail = await evnex_client.get_charge_point_detail(charge_point.id)
+
+                    for connector_brief in charge_point_detail.connectors:
+                        data['connector_brief'][(charge_point.id, connector_brief.connectorId)] = connector_brief
+
                     charge_point_transactions = await evnex_client.get_charge_point_transactions(charge_point_id=charge_point.id)
                     charge_point_override: EvnexChargePointOverrideConfig = await evnex_client.get_charge_point_override(charge_point_id=charge_point.id)
 

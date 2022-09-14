@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass
 from typing import Callable, Optional, Union
 
-from evnex.schema.charge_points import EvnexChargePoint, EvnexChargePointTransaction
+from evnex.schema.charge_points import EvnexChargePoint, EvnexChargePointDetail, EvnexChargePointTransaction
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -73,31 +73,19 @@ class EvnexOrgWideChargeSessionsCountSensor(EvnexOrgEntity, SensorEntity):
         return self.coordinator.data['org_insights'][self.org_id][-1].startDate
 
 
-class EvnexChargerChargingStatusSensor(EvnexChargerEntity, SensorEntity):
+class EvnexChargerLastUpdateSensor(EvnexChargerEntity, SensorEntity):
 
     entity_description = SensorEntityDescription(
-        key="charger_status",
-        name="Charger Status",
+        key="charger_last_heard",
+        name="Charger Last Update",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:clock",
     )
 
     @property
     def native_value(self):
-        charger_brief: EvnexChargePoint = self.coordinator.data['charge_point_brief'][self.charger_id]
-        return charger_brief.connectors[0].status
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        icon = None
-
-        status = self.native_value
-        if status == "AVAILABLE":
-            icon = "mdi:power-plug-off"
-        elif status == "OCCUPIED":
-            icon = "mdi:power-plug"
-        elif status == "CHARGING":
-            icon = "mdi:battery-positive"
-        return icon
+        detail: EvnexChargePointDetail = self.coordinator.data['charge_point_details'][self.charger_id]
+        return detail.networkStatusUpdatedDate
 
 
 class EvnexChargerNetworkStatusSensor(EvnexChargerEntity, SensorEntity):
@@ -116,7 +104,7 @@ class EvnexChargerNetworkStatusSensor(EvnexChargerEntity, SensorEntity):
 class EvnexChargerSessionEnergy(EvnexChargerEntity, SensorEntity):
     entity_description = SensorEntityDescription(
         key="session_energy",
-        name="Session Energy Output",
+        name="Session Energy Added",
         icon="mdi:lightning-bolt-circle",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -281,7 +269,7 @@ async def async_setup_entry(
 
     for charger_id in coordinator.data['charge_point_brief']:
 
-        entities.append(EvnexChargerChargingStatusSensor(coordinator, charger_id))
+        entities.append(EvnexChargerLastUpdateSensor(coordinator, charger_id))
         entities.append(EvnexChargerNetworkStatusSensor(coordinator, charger_id))
 
         entities.append(EvnexChargerSessionEnergy(coordinator, charger_id))

@@ -7,7 +7,7 @@ authors = ["Brian Thorne <brian@thorne.link>"]
 [tool.poetry.dependencies]
 python = "^3.10"
 homeassistant = "^2022.9.1"
-evnex = "^0.2.6"
+evnex = "^0.2"
 
 [tool.poetry.dev-dependencies]
 
