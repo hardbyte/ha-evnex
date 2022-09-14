@@ -9,7 +9,7 @@ from datetime import timedelta
 from typing import Optional
 
 from evnex.api import Evnex
-from evnex.schema.charge_points import EvnexChargePoint, EvnexChargePointDetail
+from evnex.schema.charge_points import EvnexChargePoint, EvnexChargePointDetail, EvnexChargePointOverrideConfig
 from evnex.schema.user import EvnexUserDetail
 from evnex.errors import NotAuthorizedException
 
@@ -130,6 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             'charge_points': {},                # by_org_id
             'charge_point_brief': {},           # by cp_id
             'charge_point_details': {},         # by cp_id
+            'charge_point_override': {},        # by cp_id
             'charge_point_transactions': {},    # by cp_id
             'connector_brief': {}               # by (cp_id, connectorId)
         }
@@ -160,9 +161,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     _LOGGER.info(f"Getting evnex charge point data for {charge_point.name}")
                     charge_point_detail: EvnexChargePointDetail = await evnex_client.get_charge_point_detail(charge_point.id)
                     charge_point_transactions = await evnex_client.get_charge_point_transactions(charge_point_id=charge_point.id)
+                    charge_point_override: EvnexChargePointOverrideConfig = await evnex_client.get_charge_point_override(charge_point_id=charge_point.id)
 
                     data['charge_point_brief'][charge_point.id] = charge_point
                     data['charge_point_details'][charge_point.id] = charge_point_detail
+                    data['charge_point_override'][charge_point.id] = charge_point_override
                     data['charge_point_transactions'][charge_point.id] = charge_point_transactions
 
             return data

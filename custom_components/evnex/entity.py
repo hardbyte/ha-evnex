@@ -59,7 +59,10 @@ class EvnexChargerEntity(CoordinatorEntity):
 
     @property
     def _attr_unique_id(self):
-        return self.charger_id + self.entity_description.key
+        try:
+            return self.charger_id + self.entity_description.key
+        except AttributeError:
+            return self.charger_id + self.__class__.__name__
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -92,6 +95,7 @@ class EvnexChargePointConnectorEntity(EvnexChargerEntity):
         self.connector_id = connector_id
         self.connector_brief: EvnexChargePointConnector = self.connector_brief_by_id[connector_id]
 
+    # Icon based on connector type? mdi:ev-plug-type2
     # @property
     # def device_info(self) -> DeviceInfo:
     #     """Return the device_info of the org."""
