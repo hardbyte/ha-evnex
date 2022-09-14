@@ -73,20 +73,6 @@ class EvnexOrgWideChargeSessionsCountSensor(EvnexOrgEntity, SensorEntity):
         return self.coordinator.data['org_insights'][self.org_id][-1].startDate
 
 
-class EvnexChargerLastUpdateSensor(EvnexChargerEntity, SensorEntity):
-
-    entity_description = SensorEntityDescription(
-        key="charger_last_heard",
-        name="Charger Last Update",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        icon="mdi:clock",
-    )
-
-    @property
-    def native_value(self):
-        detail: EvnexChargePointDetail = self.coordinator.data['charge_point_details'][self.charger_id]
-        return detail.networkStatusUpdatedDate
-
 
 class EvnexChargerNetworkStatusSensor(EvnexChargerEntity, SensorEntity):
     entity_description = SensorEntityDescription(
@@ -269,7 +255,6 @@ async def async_setup_entry(
 
     for charger_id in coordinator.data['charge_point_brief']:
 
-        entities.append(EvnexChargerLastUpdateSensor(coordinator, charger_id))
         entities.append(EvnexChargerNetworkStatusSensor(coordinator, charger_id))
 
         entities.append(EvnexChargerSessionEnergy(coordinator, charger_id))
