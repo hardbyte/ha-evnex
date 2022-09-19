@@ -1,4 +1,5 @@
 """Sensor platform for evnex."""
+import datetime
 import logging
 from dataclasses import dataclass
 from typing import Callable, Optional, Union
@@ -120,7 +121,7 @@ class EvnexChargerSessionCost(EvnexChargerEntity, SensorEntity):
     @property
     def native_value(self):
         t: EvnexChargePointTransaction = self.coordinator.data['charge_point_transactions'][self.charger_id][0]
-        if t.endDate is None:
+        if t.endDate is None and t.electricityCost is not None:
             return t.electricityCost.cost
         else:
             return 0.0
@@ -139,9 +140,10 @@ class EvnexChargerSessionTime(EvnexChargerEntity, SensorEntity):
     def native_value(self):
         t: EvnexChargePointTransaction = self.coordinator.data['charge_point_transactions'][self.charger_id][0]
         if t.endDate is None:
-            return t.electricityCost.cost
+            now = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+            return (now - t.startDate).total_seconds()
         else:
-            return 0.0
+            return (t.endDate - t.startDate).total_seconds()
 
 
 class EvnexChargerLastSessionStartTime(EvnexChargerEntity, SensorEntity):
@@ -208,16 +210,15 @@ class EvnexChargePortConnectorPowerSensor(EvnexChargePointConnectorEntity, Senso
         key="connector_power",
         name="Metered Power",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_WATT,
-        unit_of_measurement=POWER_KILO_WATT,
-        icon="mdi:lightening",
+        native_unit_of_measurement=POWER_KILO_WATT,
+        icon="mdi:flash-triangle",
         state_class=SensorStateClass.MEASUREMENT,
     )
 
     @property
     def native_value(self):
         brief = self.coordinator.data['connector_brief'][(self.charger_id, self.connector_id)]
-        return brief.meter.power
+        return brief.meter.power / 1000
 
 
 class EvnexChargePortConnectorFrequencySensor(EvnexChargePointConnectorEntity, SensorEntity):

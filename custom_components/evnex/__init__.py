@@ -173,12 +173,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             return data
         except NotAuthorizedException:
             if not is_retry:
-                _LOGGER.warning(
-                    "EVNEX Session Token is invalid, attempting to re-login"
-                )
                 await hass.async_add_executor_job(evnex_client.authenticate)
                 persist_evnex_auth_tokens(hass, entry, evnex_client.id_token, evnex_client.refresh_token, evnex_client.access_token)
                 return await async_update_data(is_retry=True)
+            _LOGGER.warning(
+                "EVNEX Session Token is invalid and failed attempt to re-login"
+            )
             raise
         except Exception as err:
             _LOGGER.error("Unhandled exception while updating evnex info")

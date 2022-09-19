@@ -16,5 +16,8 @@ Each charger device exposes:
 - Charger status
 - Connector status for each connector
 - Metered Power/Voltage and Frequency for each metered connection
+- Current session information
 
-Will add session charging information soon.
+## Screenshot
+
+![](.github/sensors.png)

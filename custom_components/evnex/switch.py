@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntityDescription
@@ -6,8 +7,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+
 from custom_components.evnex import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 from custom_components.evnex.entity import EvnexChargerEntity
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class EvnexChargerOverrideSwitch(EvnexChargerEntity, SwitchEntity):
@@ -37,15 +42,16 @@ class EvnexChargerOverrideSwitch(EvnexChargerEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Charge now."""
+        _LOGGER.info("Enabling 'Charge Now' switch")
         await self.evnex.set_charge_point_override(
             charge_point_id=self.charger_id,
             charge_now=True
         )
         await self.coordinator.async_request_refresh()
 
-
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Don't charge now."""
+        _LOGGER.info("Disabling 'Charge Now' switch")
         await self.evnex.set_charge_point_override(
             charge_point_id=self.charger_id,
             charge_now=False
