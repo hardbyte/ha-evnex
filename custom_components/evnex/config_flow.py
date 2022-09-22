@@ -13,6 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_ACCESS_TOKEN
 
 from evnex.api import Evnex
+from evnex.errors import NotAuthorizedException
 
 from .const import DOMAIN
 
@@ -32,14 +33,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     try:
-
         evnex_client = await hass.async_add_executor_job(
             Evnex, data[CONF_USERNAME], data[CONF_PASSWORD]
         )
 
         user_data = await evnex_client.get_user_detail()
         logger.info(f"Have initial user data from evnex cloud API")
-    except ValueError:
+
+    except NotAuthorizedException:
         raise InvalidAuth
 
     # TODO improve and test these
