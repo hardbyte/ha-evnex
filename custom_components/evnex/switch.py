@@ -30,15 +30,17 @@ class EvnexChargerOverrideSwitch(EvnexChargerEntity, SwitchEntity):
 
     @property
     def icon(self):
-        charge_now = self.coordinator.data['charge_point_override'][self.charger_id].chargeNow
-        if charge_now:
-            return 'mdi:check-network'
-        else:
-            return 'mdi:close-network'
+        override = self.coordinator.data['charge_point_override'][self.charger_id]
+        if override is None:
+            return 'network-strength-off-outline'
+
+        charge_now = override.chargeNow
+        return 'mdi:check-network' if charge_now else 'mdi:close-network'
 
     @property
     def is_on(self):
-        return self.coordinator.data['charge_point_override'][self.charger_id].chargeNow
+        override = self.coordinator.data['charge_point_override'][self.charger_id]
+        return override is not None and override.chargeNow
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Charge now."""

@@ -163,7 +163,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                         data['connector_brief'][(charge_point.id, connector_brief.connectorId)] = connector_brief
 
                     charge_point_transactions = await evnex_client.get_charge_point_transactions(charge_point_id=charge_point.id)
-                    charge_point_override: EvnexChargePointOverrideConfig = await evnex_client.get_charge_point_override(charge_point_id=charge_point.id)
+
+                    # Only get the charge point override if the charge point is online!
+                    if charge_point_detail.networkStatus == "ONLINE":
+                        charge_point_override: EvnexChargePointOverrideConfig = await evnex_client.get_charge_point_override(charge_point_id=charge_point.id)
+                    else:
+                        charge_point_override = None
 
                     data['charge_point_brief'][charge_point.id] = charge_point
                     data['charge_point_details'][charge_point.id] = charge_point_detail
