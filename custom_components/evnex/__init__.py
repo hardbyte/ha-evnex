@@ -147,11 +147,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
             for org in account.organisations:
                 _LOGGER.info(f"Getting evnex charge points for {org.name}")
-                charge_points: list[EvnexChargePoint] = await evnex_client.get_org_charge_points(org.id)
+                charge_points: list[EvnexChargePoint] = await evnex_client.get_org_charge_points(org.slug)
                 data['charge_points'][org.id] = [cp for cp in charge_points]
                 data['org_briefs'][org.id] = org
 
-                daily_insights = await evnex_client.get_org_insight(days=7, org_id=org.id)
+                daily_insights = await evnex_client.get_org_insight(days=7, org_id=org.slug)
                 data['org_insights'][org.id] = daily_insights
 
                 for charge_point in charge_points:
