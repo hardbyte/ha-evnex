@@ -146,28 +146,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             data['user'] = account
 
             for org in account.organisations:
-                _LOGGER.info(f"Getting evnex charge points for {org.name}")
+                _LOGGER.info(f"Getting evnex charge points for '{org.name}'")
                 charge_points: list[EvnexChargePoint] = await evnex_client.get_org_charge_points(org.slug)
                 data['charge_points'][org.id] = [cp for cp in charge_points]
                 data['org_briefs'][org.id] = org
-
+                _LOGGER.debug(f"Getting evnex org insights for {org.name}")
                 daily_insights = await evnex_client.get_org_insight(days=7, org_id=org.slug)
                 data['org_insights'][org.id] = daily_insights
 
                 for charge_point in charge_points:
 
-                    _LOGGER.info(f"Getting evnex charge point data for {charge_point.name}")
+                    _LOGGER.debug(f"Getting evnex charge point data for '{charge_point.name}'")
+                    # Note we could migrate to v3 charge point detail which includes more info
+                    #charge_point_detail_v3 = await evnex_client.get_charge_point_detail_v3(charge_point_id=charge_point.id)
+
                     charge_point_detail: EvnexChargePointDetail = await evnex_client.get_charge_point_detail(charge_point.id)
 
                     for connector_brief in charge_point_detail.connectors:
                         data['connector_brief'][(charge_point.id, connector_brief.connectorId)] = connector_brief
 
+                    _LOGGER.debug(f"Getting evnex charge point transactions for '{charge_point.name}'")
                     charge_point_transactions = await evnex_client.get_charge_point_transactions(charge_point_id=charge_point.id)
 
                     # Only get the charge point override if the charge point is online!
                     if charge_point_detail.networkStatus == "ONLINE":
-                        charge_point_override: EvnexChargePointOverrideConfig = await evnex_client.get_charge_point_override(charge_point_id=charge_point.id)
+                        _LOGGER.debug(f"Getting evnex charge point override for '{charge_point.name}'")
+                        charge_point_override: EvnexChargePointOverrideConfig = await evnex_client.get_charge_point_override(
+                            charge_point_id=charge_point.id
+                        )
                     else:
+                        _LOGGER.debug("Not getting charge point override as charge point is not ONLINE")
                         charge_point_override = None
 
                     data['charge_point_brief'][charge_point.id] = charge_point
@@ -178,6 +186,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             return data
         except NotAuthorizedException:
             if not is_retry:
+                _LOGGER.debug("Refreshing auth and trying again")
                 await hass.async_add_executor_job(evnex_client.authenticate)
                 persist_evnex_auth_tokens(hass, entry, evnex_client.id_token, evnex_client.refresh_token, evnex_client.access_token)
                 return await async_update_data(is_retry=True)
@@ -186,7 +195,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             )
             raise
         except Exception as err:
-            _LOGGER.error("Unhandled exception while updating evnex info")
+            _LOGGER.exception("Unhandled exception while updating evnex info")
             raise UpdateFailed from err
 
     coordinator = DataUpdateCoordinator(
