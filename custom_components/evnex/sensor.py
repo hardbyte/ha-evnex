@@ -190,7 +190,7 @@ class EvnexChargePortConnectorStatusSensor(EvnexChargePointConnectorEntity, Sens
     def native_value(self):
         brief = self.coordinator.data['connector_brief'][(
             self.charger_id, self.connector_id)]
-        return brief.status
+        return brief.ocppStatus
 
     @property
     def icon(self):
