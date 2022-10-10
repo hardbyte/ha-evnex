@@ -51,7 +51,8 @@ def persist_evnex_auth_tokens(
             try:
                 session_dict = json.load(spf)
             except json.decoder.JSONDecodeError:
-                _LOGGER.error("Failed to load existing session data, overwriting!")
+                _LOGGER.error(
+                    "Failed to load existing session data, overwriting!")
     _LOGGER.info("Persisting session tokens to %s", file)
     session_dict[entry.entry_id] = {
         'id_token': id_token,
@@ -156,26 +157,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
                 for charge_point in charge_points:
 
-                    _LOGGER.debug(f"Getting evnex charge point data for '{charge_point.name}'")
-                    # Note we could migrate to v3 charge point detail which includes more info
-                    #charge_point_detail_v3 = await evnex_client.get_charge_point_detail_v3(charge_point_id=charge_point.id)
+                    _LOGGER.debug(
+                        f"Getting evnex charge point data for '{charge_point.name}'")
+                    # Migrated to v3 charge point detail which includes more info
+                    api_v3_response = await evnex_client.get_charge_point_detail_v3(charge_point_id=charge_point.id)
+                    charge_point_detail = api_v3_response.data.attributes
 
-                    charge_point_detail: EvnexChargePointDetail = await evnex_client.get_charge_point_detail(charge_point.id)
+                    # charge_point_detail: EvnexChargePointDetail = await evnex_client.get_charge_point_detail(charge_point.id)
 
                     for connector_brief in charge_point_detail.connectors:
-                        data['connector_brief'][(charge_point.id, connector_brief.connectorId)] = connector_brief
+                        data['connector_brief'][(
+                            charge_point.id, connector_brief.connectorId)] = connector_brief
 
-                    _LOGGER.debug(f"Getting evnex charge point transactions for '{charge_point.name}'")
+                    _LOGGER.debug(
+                        f"Getting evnex charge point transactions for '{charge_point.name}'")
                     charge_point_transactions = await evnex_client.get_charge_point_transactions(charge_point_id=charge_point.id)
 
                     # Only get the charge point override if the charge point is online!
                     if charge_point_detail.networkStatus == "ONLINE":
-                        _LOGGER.debug(f"Getting evnex charge point override for '{charge_point.name}'")
+                        _LOGGER.debug(
+                            f"Getting evnex charge point override for '{charge_point.name}'")
                         charge_point_override: EvnexChargePointOverrideConfig = await evnex_client.get_charge_point_override(
                             charge_point_id=charge_point.id
                         )
                     else:
-                        _LOGGER.debug("Not getting charge point override as charge point is not ONLINE")
+                        _LOGGER.debug(
+                            "Not getting charge point override as charge point is not ONLINE")
                         charge_point_override = None
 
                     data['charge_point_brief'][charge_point.id] = charge_point
@@ -188,7 +195,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             if not is_retry:
                 _LOGGER.debug("Refreshing auth and trying again")
                 await hass.async_add_executor_job(evnex_client.authenticate)
-                persist_evnex_auth_tokens(hass, entry, evnex_client.id_token, evnex_client.refresh_token, evnex_client.access_token)
+                persist_evnex_auth_tokens(
+                    hass, entry, evnex_client.id_token, evnex_client.refresh_token, evnex_client.access_token)
                 return await async_update_data(is_retry=True)
             _LOGGER.warning(
                 "EVNEX Session Token is invalid and failed attempt to re-login"
@@ -220,7 +228,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Setup components
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-    #await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -232,5 +240,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
