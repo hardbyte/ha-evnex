@@ -292,8 +292,8 @@ async def async_setup_entry(
 
     # Create an Evnex Org Sensor showing org wide weekly summary of powerUsage, charging sessions, cost
     entities.append(EvnexOrgWidePowerUsageSensorToday(coordinator=coordinator))
-    entities.append(EvnexOrgWideChargeSessionsCountSensor(
-        coordinator=coordinator))
+    entities.append(EvnexOrgWideChargeSessionsCountSensor(coordinator=coordinator))
+    entities.append(EvnexOrgTierSensor(coordinator=coordinator))
 
     for charger_id in coordinator.data['charge_point_brief']:
 
