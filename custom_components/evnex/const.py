@@ -11,7 +11,7 @@ ATTRIBUTION = "Data provided by https://evnex.io"
 ISSUE_URL = "https://github.com/hardbyte/ha-evnex/issues"
 
 # Platforms
-PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.NUMBER]
 
 # Configuration and options
 CONF_ENABLED = "enabled"

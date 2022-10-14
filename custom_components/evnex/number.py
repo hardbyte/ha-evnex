@@ -1,0 +1,99 @@
+"""Number platform for ocpp."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Final
+
+from homeassistant.components.number import (
+    NumberEntity,
+    NumberEntityDescription,
+    RestoreNumber,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+
+@dataclass
+class EvnexNumberDescription(NumberEntityDescription):
+    """Class to describe a Number entity."""
+
+    initial_value: float | None = None
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the number sliders."""
+    entities = []
+
+    evnex_api_client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
+
+    brief = coordinator.data['charge_point_brief']
+    for charger_id in brief:
+        connector_brief = coordinator.data['connector_brief']
+        description = EvnexNumberDescription(
+            key=f"charger_maximum_current",
+            name="Charger Maximum Current",
+            icon="mdi:ev-station",
+            initial_value=connector_brief[(charger_id, 1)].maxAmperage,
+            native_min_value=0,
+            native_max_value=connector_brief[(charger_id, 1)].maxAmperage,
+            native_step=1,
+        )
+        entities.append(EvnexNumber(
+            evnex_api_client, coordinator, charger_id, description))
+
+    async_add_entities(entities)
+
+
+class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
+    """Individual slider for setting charge rate."""
+
+    entity_description: EvnexNumberDescription
+
+    def __init__(self, api_client, coordinator, charger_id, description):
+        """Initialize a Number instance."""
+        self.evnex = api_client
+        self.entity_description = description
+        self._attr_native_value = self.entity_description.initial_value
+        self._attr_should_poll = False
+
+        super().__init__(coordinator=coordinator, charger_id=charger_id)
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        if restored := await self.async_get_last_number_data():
+            self._attr_native_value = restored.native_value
+        async_dispatcher_connect(
+            self._hass, DATA_UPDATED, self._schedule_immediate_update
+        )
+
+    @callback
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return not self.coordinator.data['charge_point_brief'][self.charger_id] == "OFFLINE"  # type: ignore [no-any-return]
+
+    async def async_set_native_value(self, value):
+        """Set new value."""
+        num_value = float(value)
+        _LOGGER.info(f"Setting current to {num_value}A")
+        resp = await self.evnex.set_charger_load_profile(
+            charging_profile_periods=[{"limit": num_value, "start": 0}]
+            enabled=True,
+            duration=86400,
+            units="A"
+        )
+
+        if resp is True:
+            self._attr_native_value = num_value
+            self.async_write_ha_state()
+
+        await self.coordinator.async_request_refresh()
