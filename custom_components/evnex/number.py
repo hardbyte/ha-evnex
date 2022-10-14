@@ -35,7 +35,7 @@ async def async_setup_entry(
     for charger_id in brief:
         connector_brief = coordinator.data['connector_brief']
         description = EvnexNumberDescription(
-            key=f"charger_maximum_current",
+            key="charger_maximum_current",
             name="Charger Maximum Current",
             icon="mdi:ev-station",
             initial_value=connector_brief[(charger_id, 1)].maxAmperage,
@@ -86,7 +86,7 @@ class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
         num_value = float(value)
         _LOGGER.info(f"Setting current to {num_value}A")
         resp = await self.evnex.set_charger_load_profile(
-            charging_profile_periods=[{"limit": num_value, "start": 0}]
+            charging_profile_periods=[{"limit": num_value, "start": 0}],
             enabled=True,
             duration=86400,
             units="A"
