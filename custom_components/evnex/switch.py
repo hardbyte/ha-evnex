@@ -61,6 +61,55 @@ class EvnexChargerOverrideSwitch(EvnexChargerEntity, SwitchEntity):
         await self.coordinator.async_request_refresh()
 
 
+class EvnexChargerAvailabilitySwitch(EvnexChargePointConnectorEntity, SwitchEntity):
+
+    def __init__(self, api_client, coordinator, charger_id, connector_id):
+        """Initialise the switch."""
+        self.evnex = api_client
+
+        super().__init__(coordinator=coordinator, charger_id=charger_id)
+
+    entity_description = SensorEntityDescription(
+        key="_".join(["connector", self.connector_id, "availability_switch"]),
+        name=f"Connector {self.connector_id} Availability",
+    )
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return not self.coordinator.data['charge_point_brief'][self.charger_id] == "OFFLINE"  # type: ignore [no-any-return]
+
+    @property
+    def icon(self):
+        return 'mdi:ev-station'
+
+    @property
+    def is_on(self):
+        brief = self.coordinator.data['connector_brief'][(
+            self.charger_id, self.connector_id)]
+        return brief is not None and brief.ocppStatus == "AVAILABLE"
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Change to available ie Operative."""
+        _LOGGER.info("Enabling 'Availability' switch")
+        await self.evnex.set_connector_availability(
+            charge_point_id=self.charger_id,
+            type='Operative',
+            connector_id=self.connector_id
+        )
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Change to unavailable ie Inoperative."""
+        _LOGGER.info("Disabling 'Availability' switch")
+        await self.evnex.set_connector_availability(
+            charge_point_id=self.charger_id,
+            type='Inoperative',
+            connector_id=self.connector_id
+        )
+        await self.coordinator.async_request_refresh()
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -73,6 +122,10 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
 
     for charger_id in coordinator.data['charge_point_brief']:
-        entities.append(EvnexChargerOverrideSwitch(evnex_api_client, coordinator, charger_id))
+        entities.append(EvnexChargerOverrideSwitch(
+            evnex_api_client, coordinator, charger_id))
+    for charger_id, connector_id in coordinator.data['connector_brief']:
+        entities.append(EvnexChargerAvailabilitySwitch(
+            evnex_api_client, coordinator, charger_id, connector_id))
 
     async_add_entities(entities)
