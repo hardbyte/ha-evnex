@@ -25,4 +25,6 @@ DATA_CLIENT = "evnex-client"
 DATA_COORDINATOR = "coordinator"
 
 # Coordinator Data Keys
-# TODO
+
+# Signals
+DATA_UPDATED = "evnex_data_updated"

@@ -2,15 +2,15 @@ import logging
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntityDescription
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
 from custom_components.evnex import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
-from custom_components.evnex.entity import EvnexChargerEntity
-
+from custom_components.evnex.entity import EvnexChargePointConnectorEntity, EvnexChargerEntity
+from evnex import Evnex
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,16 +63,16 @@ class EvnexChargerOverrideSwitch(EvnexChargerEntity, SwitchEntity):
 
 class EvnexChargerAvailabilitySwitch(EvnexChargePointConnectorEntity, SwitchEntity):
 
-    def __init__(self, api_client, coordinator, charger_id, connector_id):
+    def __init__(self, api_client, coordinator, charger_id, connector_id='1'):
         """Initialise the switch."""
-        self.evnex = api_client
+        self.evnex: Evnex = api_client
 
-        super().__init__(coordinator=coordinator, charger_id=charger_id)
+        super().__init__(coordinator=coordinator, charger_id=charger_id, connector_id=connector_id)
 
-    entity_description = SensorEntityDescription(
-        key="_".join(["connector", self.connector_id, "availability_switch"]),
-        name=f"Connector {self.connector_id} Availability",
-    )
+        self.entity_description = SwitchEntityDescription(
+            key="_".join(["connector", self.connector_id, "availability_switch"]),
+            name=f"Connector {self.connector_id} Availability",
+        )
 
     @property
     def available(self) -> bool:
@@ -85,16 +85,14 @@ class EvnexChargerAvailabilitySwitch(EvnexChargePointConnectorEntity, SwitchEnti
 
     @property
     def is_on(self):
-        brief = self.coordinator.data['connector_brief'][(
-            self.charger_id, self.connector_id)]
+        brief = self.coordinator.data['connector_brief'][(self.charger_id, self.connector_id)]
         return brief is not None and brief.ocppStatus == "AVAILABLE"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Change to available ie Operative."""
         _LOGGER.info("Enabling 'Availability' switch")
-        await self.evnex.set_connector_availability(
+        await self.evnex.enable_charger(
             charge_point_id=self.charger_id,
-            type='Operative',
             connector_id=self.connector_id
         )
         await self.coordinator.async_request_refresh()
@@ -102,9 +100,8 @@ class EvnexChargerAvailabilitySwitch(EvnexChargePointConnectorEntity, SwitchEnti
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Change to unavailable ie Inoperative."""
         _LOGGER.info("Disabling 'Availability' switch")
-        await self.evnex.set_connector_availability(
+        await self.evnex.disable_charger(
             charge_point_id=self.charger_id,
-            type='Inoperative',
             connector_id=self.connector_id
         )
         await self.coordinator.async_request_refresh()
