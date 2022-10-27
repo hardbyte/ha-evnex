@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "evnex-ha"
-version = "0.2.5"
+version = "0.2.6"
 description = ""
 authors = ["Brian Thorne <brian@thorne.link>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-homeassistant = "^2022.9.7"
-evnex = "^0.2"
+homeassistant = "^2022.10"
+evnex = "^0.3"
 
 [tool.poetry.dev-dependencies]
 
