@@ -11,6 +11,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from custom_components.evnex import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 from custom_components.evnex.entity import EvnexChargePointConnectorEntity, EvnexChargerEntity
 from evnex import Evnex
+from evnex.schema.charge_points import EvnexChargePoint
+from evnex.schema.v3.charge_points import EvnexChargePointConnector, EvnexChargePointDetail
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +79,13 @@ class EvnexChargerAvailabilitySwitch(EvnexChargePointConnectorEntity, SwitchEnti
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return not self.coordinator.data['charge_point_brief'][self.charger_id] == "OFFLINE"  # type: ignore [no-any-return]
+        charge_point_brief: EvnexChargePoint = self.coordinator.data['charge_point_brief'][self.charger_id]
+        charge_point_details: EvnexChargePointDetail = self.coordinator.data['charge_point_details'][self.charger_id]
+
+        return True
+        # TODO
+
+        #return not charge_point_brief == "OFFLINE"  # type: ignore [no-any-return]
 
     @property
     def icon(self):
@@ -85,7 +93,7 @@ class EvnexChargerAvailabilitySwitch(EvnexChargePointConnectorEntity, SwitchEnti
 
     @property
     def is_on(self):
-        brief = self.coordinator.data['connector_brief'][(self.charger_id, self.connector_id)]
+        brief: EvnexChargePointConnector = self.coordinator.data['connector_brief'][(self.charger_id, self.connector_id)]
         return brief is not None and brief.ocppStatus == "AVAILABLE"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
