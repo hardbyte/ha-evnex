@@ -19,6 +19,7 @@ from custom_components.evnex import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 from custom_components.evnex.const import DATA_UPDATED
 from custom_components.evnex.entity import EvnexChargePointConnectorEntity
 from evnex import Evnex
+from evnex.schema.charge_points import EvnexChargePointLoadSchedule
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,8 +105,10 @@ class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
             units="A"
         )
 
-        if resp is True:
+        if isinstance(resp, EvnexChargePointLoadSchedule):
             self._attr_native_value = num_value
             self.async_write_ha_state()
+        else:
+            _LOGGER.warn(f"Failed request: {resp}")
 
         await self.coordinator.async_request_refresh()
