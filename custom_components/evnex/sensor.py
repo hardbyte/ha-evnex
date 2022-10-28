@@ -314,6 +314,8 @@ async def async_setup_entry(
                 coordinator, charger_id, connector_id))
             entities.append(EvnexChargePortConnectorVoltageSensor(
                 coordinator, charger_id, connector_id))
+            entities.append(EvnexChargePortConnectorCurrentSensor(
+                coordinator, charger_id, connector_id))
             entities.append(EvnexChargePortConnectorPowerSensor(
                 coordinator, charger_id, connector_id))
             entities.append(EvnexChargePortConnectorFrequencySensor(
