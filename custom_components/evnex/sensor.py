@@ -4,7 +4,7 @@ import logging
 from dataclasses import dataclass
 from typing import Callable, Optional, Union
 
-from evnex.schema.charge_points import EvnexChargePoint, EvnexChargePointDetail, EvnexChargePointTransaction
+from evnex.schema.charge_points import EvnexChargePoint, EvnexChargePointTransaction
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -313,6 +313,8 @@ async def async_setup_entry(
             entities.append(EvnexChargePortConnectorStatusSensor(
                 coordinator, charger_id, connector_id))
             entities.append(EvnexChargePortConnectorVoltageSensor(
+                coordinator, charger_id, connector_id))
+            entities.append(EvnexChargePortConnectorCurrentSensor(
                 coordinator, charger_id, connector_id))
             entities.append(EvnexChargePortConnectorPowerSensor(
                 coordinator, charger_id, connector_id))

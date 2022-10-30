@@ -1,8 +1,9 @@
 """Number platform for ocpp."""
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
-from typing import Final
+
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -11,6 +12,16 @@ from homeassistant.components.number import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from custom_components.evnex import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
+from custom_components.evnex.const import DATA_UPDATED
+from custom_components.evnex.entity import EvnexChargePointConnectorEntity
+from evnex import Evnex
+from evnex.schema.charge_points import EvnexChargePointLoadSchedule
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -35,12 +46,12 @@ async def async_setup_entry(
     for charger_id in brief:
         connector_brief = coordinator.data['connector_brief']
         description = EvnexNumberDescription(
-            key=f"charger_maximum_current",
+            key="charger_maximum_current",
             name="Charger Maximum Current",
             icon="mdi:ev-station",
-            initial_value=connector_brief[(charger_id, 1)].maxAmperage,
+            initial_value=connector_brief[(charger_id, '1')].maxAmperage,
             native_min_value=0,
-            native_max_value=connector_brief[(charger_id, 1)].maxAmperage,
+            native_max_value=connector_brief[(charger_id, '1')].maxAmperage,
             native_step=1,
         )
         entities.append(EvnexNumber(
@@ -56,7 +67,7 @@ class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
 
     def __init__(self, api_client, coordinator, charger_id, description):
         """Initialize a Number instance."""
-        self.evnex = api_client
+        self.evnex: Evnex = api_client
         self.entity_description = description
         self._attr_native_value = self.entity_description.initial_value
         self._attr_should_poll = False
@@ -69,7 +80,7 @@ class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
         if restored := await self.async_get_last_number_data():
             self._attr_native_value = restored.native_value
         async_dispatcher_connect(
-            self._hass, DATA_UPDATED, self._schedule_immediate_update
+            self.hass, DATA_UPDATED, self._schedule_immediate_update
         )
 
     @callback
@@ -85,15 +96,19 @@ class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
         """Set new value."""
         num_value = float(value)
         _LOGGER.info(f"Setting current to {num_value}A")
+
         resp = await self.evnex.set_charger_load_profile(
-            charging_profile_periods=[{"limit": num_value, "start": 0}]
+            self.charger_id,
+            charging_profile_periods=[{"limit": num_value, "start": 0}],
             enabled=True,
             duration=86400,
             units="A"
         )
 
-        if resp is True:
+        if isinstance(resp, EvnexChargePointLoadSchedule):
             self._attr_native_value = num_value
             self.async_write_ha_state()
+        else:
+            _LOGGER.warn(f"Failed request: {resp}")
 
         await self.coordinator.async_request_refresh()
