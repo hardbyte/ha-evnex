@@ -10,6 +10,8 @@ from .const import DOMAIN, NAME
 class EvnexOrgEntity(CoordinatorEntity):
     """Base Entity for an Evnex Org Sensor"""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: DataUpdateCoordinator, org_id: str = None):
         """Initialize an Evnex Org"""
         super().__init__(coordinator)
@@ -38,6 +40,8 @@ class EvnexOrgEntity(CoordinatorEntity):
 
 class EvnexChargerEntity(CoordinatorEntity):
     """Base Entity for a specific evnex charger"""
+
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator: DataUpdateCoordinator, charger_id: str):
         """Initialize the ChargePoint entity."""
