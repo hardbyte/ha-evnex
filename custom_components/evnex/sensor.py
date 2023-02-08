@@ -129,7 +129,7 @@ class EvnexChargerSessionCost(EvnexChargerEntity, SensorEntity):
         name="Charge Cost",
         icon="mdi:cash-multiple",
         # native_unit_of_measurement=CURRENCY_DOLLAR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
     )
 
