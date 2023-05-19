@@ -55,10 +55,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return {
         CONF_USERNAME: data[CONF_USERNAME],
         CONF_PASSWORD: data[CONF_PASSWORD],
-        'unique_id': unique_id,
-        'title': user_data.name,
-        'user_id': user_data.id,
-        'default_org_id': evnex_client.org_id
+        "unique_id": unique_id,
+        "title": user_data.name,
+        "user_id": user_data.id,
+        "default_org_id": evnex_client.org_id,
     }
 
 
@@ -68,7 +68,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(
-            self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
@@ -93,9 +93,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    'user_id': info['user_id'],
-                    'default_org_id': info['default_org_id']
-                }
+                    "user_id": info["user_id"],
+                    "default_org_id": info["default_org_id"],
+                },
             )
 
         return self.async_show_form(
