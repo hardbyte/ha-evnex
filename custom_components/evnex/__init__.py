@@ -9,7 +9,9 @@ from datetime import timedelta
 from typing import Optional
 
 from evnex.api import Evnex
-from evnex.schema.charge_points import EvnexChargePoint, EvnexChargePointDetail, EvnexChargePointOverrideConfig
+from evnex.schema.charge_points import EvnexChargePoint, EvnexChargePointOverrideConfig
+from evnex.schema.v3.charge_points import EvnexChargePointDetail
+
 from evnex.schema.user import EvnexUserDetail
 from evnex.errors import NotAuthorizedException
 
@@ -161,9 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                         f"Getting evnex charge point data for '{charge_point.name}'")
                     # Migrated to v3 charge point detail which includes more info
                     api_v3_response = await evnex_client.get_charge_point_detail_v3(charge_point_id=charge_point.id)
-                    charge_point_detail = api_v3_response.data.attributes
-
-                    # charge_point_detail: EvnexChargePointDetail = await evnex_client.get_charge_point_detail(charge_point.id)
+                    charge_point_detail: EvnexChargePointDetail = api_v3_response.data.attributes
 
                     for connector_brief in charge_point_detail.connectors:
                         data['connector_brief'][(
@@ -227,8 +227,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await coordinator.async_config_entry_first_refresh()
 
     # Setup components
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-    # await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    #hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

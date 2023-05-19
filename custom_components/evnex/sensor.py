@@ -4,7 +4,7 @@ import logging
 from dataclasses import dataclass
 from typing import Callable, Optional, Union
 
-from evnex.schema.charge_points import EvnexChargePoint, EvnexChargePointDetail, EvnexChargePointTransaction
+from evnex.schema.charge_points import EvnexChargePoint, EvnexChargePointTransaction
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -190,7 +190,7 @@ class EvnexChargePortConnectorStatusSensor(EvnexChargePointConnectorEntity, Sens
     def native_value(self):
         brief = self.coordinator.data['connector_brief'][(
             self.charger_id, self.connector_id)]
-        return brief.status
+        return brief.ocppStatus
 
     @property
     def icon(self):
@@ -292,8 +292,8 @@ async def async_setup_entry(
 
     # Create an Evnex Org Sensor showing org wide weekly summary of powerUsage, charging sessions, cost
     entities.append(EvnexOrgWidePowerUsageSensorToday(coordinator=coordinator))
-    entities.append(EvnexOrgWideChargeSessionsCountSensor(
-        coordinator=coordinator))
+    entities.append(EvnexOrgWideChargeSessionsCountSensor(coordinator=coordinator))
+    entities.append(EvnexOrgTierSensor(coordinator=coordinator))
 
     for charger_id in coordinator.data['charge_point_brief']:
 
@@ -313,6 +313,8 @@ async def async_setup_entry(
             entities.append(EvnexChargePortConnectorStatusSensor(
                 coordinator, charger_id, connector_id))
             entities.append(EvnexChargePortConnectorVoltageSensor(
+                coordinator, charger_id, connector_id))
+            entities.append(EvnexChargePortConnectorCurrentSensor(
                 coordinator, charger_id, connector_id))
             entities.append(EvnexChargePortConnectorPowerSensor(
                 coordinator, charger_id, connector_id))

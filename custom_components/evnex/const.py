@@ -6,12 +6,12 @@ from homeassistant.const import Platform
 NAME = "evnex"
 DOMAIN = "evnex"
 DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "0.1.0"
+VERSION = "0.3.0"
 ATTRIBUTION = "Data provided by https://evnex.io"
 ISSUE_URL = "https://github.com/hardbyte/ha-evnex/issues"
 
 # Platforms
-PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.NUMBER]
 
 # Configuration and options
 CONF_ENABLED = "enabled"
@@ -25,4 +25,6 @@ DATA_CLIENT = "evnex-client"
 DATA_COORDINATOR = "coordinator"
 
 # Coordinator Data Keys
-# TODO
+
+# Signals
+DATA_UPDATED = "evnex_data_updated"
