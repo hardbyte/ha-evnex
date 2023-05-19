@@ -27,11 +27,13 @@ from homeassistant.helpers.update_coordinator import (
 from httpx import HTTPStatusError
 
 from .const import (
-    DATA_CLIENT, DATA_COORDINATOR, DOMAIN,
+    DATA_CLIENT,
+    DATA_COORDINATOR,
+    DOMAIN,
     ISSUE_URL,
     PLATFORMS,
     VERSION,
-    TOKEN_FILE_NAME
+    TOKEN_FILE_NAME,
 )
 
 SCAN_INTERVAL = timedelta(minutes=5)
@@ -40,7 +42,8 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 def persist_evnex_auth_tokens(
-    hass: HomeAssistant, entry: ConfigEntry,
+    hass: HomeAssistant,
+    entry: ConfigEntry,
     id_token=None,
     refresh_token=None,
     access_token=None,
@@ -53,20 +56,21 @@ def persist_evnex_auth_tokens(
             try:
                 session_dict = json.load(spf)
             except json.decoder.JSONDecodeError:
-                _LOGGER.error(
-                    "Failed to load existing session data, overwriting!")
+                _LOGGER.error("Failed to load existing session data, overwriting!")
     _LOGGER.info("Persisting session tokens to %s", file)
     session_dict[entry.entry_id] = {
-        'id_token': id_token,
-        'refresh_token': refresh_token,
-        'access_token': access_token
+        "id_token": id_token,
+        "refresh_token": refresh_token,
+        "access_token": access_token,
     }
 
     with open(os.open(file, os.O_CREAT | os.O_WRONLY, 0o600), "w") as spf:
         json.dump(session_dict, spf)
 
 
-def retrieve_evnex_auth_tokens(hass: HomeAssistant, entry: ConfigEntry) -> Optional[dict]:
+def retrieve_evnex_auth_tokens(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> Optional[dict]:
     config_dir = hass.config.config_dir
     file = os.path.join(config_dir, TOKEN_FILE_NAME)
     _LOGGER.info("Retrieving session token from: %s", file)
@@ -107,11 +111,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             Evnex,
             username,
             password,
-            evnex_auth_tokens.get('id_token'),
-            evnex_auth_tokens.get('refresh_token'),
-            evnex_auth_tokens.get('access_token'),
+            evnex_auth_tokens.get("id_token"),
+            evnex_auth_tokens.get("refresh_token"),
+            evnex_auth_tokens.get("access_token"),
             None,
-            httpx_client
+            httpx_client,
         )
 
     except NotAuthorizedException as exc:
@@ -127,15 +131,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         """Fetch data from EVNEX API"""
 
         data = {
-            'user': None,
-            'org_briefs': {},                   # by org_id
-            'org_insights': {},                 # by org_id
-            'charge_points': {},                # by_org_id
-            'charge_point_brief': {},           # by cp_id
-            'charge_point_details': {},         # by cp_id
-            'charge_point_override': {},        # by cp_id
-            'charge_point_transactions': {},    # by cp_id
-            'connector_brief': {}               # by (cp_id, connectorId)
+            "user": None,
+            "org_briefs": {},  # by org_id
+            "org_insights": {},  # by org_id
+            "charge_points": {},  # by_org_id
+            "charge_point_brief": {},  # by cp_id
+            "charge_point_details": {},  # by cp_id
+            "charge_point_override": {},  # by cp_id
+            "charge_point_sessions": {},  # by cp_id
+            "connector_brief": {},  # by (cp_id, connectorId)
         }
 
         try:
@@ -143,52 +147,79 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
             account: EvnexUserDetail = await evnex_client.get_user_detail()
 
-            persist_evnex_auth_tokens(hass, entry, evnex_client.id_token, evnex_client.refresh_token,
-                                      evnex_client.access_token)
+            persist_evnex_auth_tokens(
+                hass,
+                entry,
+                evnex_client.id_token,
+                evnex_client.refresh_token,
+                evnex_client.access_token,
+            )
 
-            data['user'] = account
+            data["user"] = account
 
             for org in account.organisations:
                 _LOGGER.info(f"Getting evnex charge points for '{org.name}'")
-                charge_points: list[EvnexChargePoint] = await evnex_client.get_org_charge_points(org.slug)
-                data['charge_points'][org.id] = [cp for cp in charge_points]
-                data['org_briefs'][org.id] = org
+                charge_points: list[
+                    EvnexChargePoint
+                ] = await evnex_client.get_org_charge_points(org.slug)
+                data["charge_points"][org.id] = [cp for cp in charge_points]
+                data["org_briefs"][org.id] = org
                 _LOGGER.debug(f"Getting evnex org insights for {org.name}")
-                daily_insights = await evnex_client.get_org_insight(days=7, org_id=org.slug)
-                data['org_insights'][org.id] = daily_insights
+                daily_insights = await evnex_client.get_org_insight(
+                    days=7, org_id=org.slug
+                )
+                data["org_insights"][org.id] = daily_insights
 
                 for charge_point in charge_points:
-
                     _LOGGER.debug(
-                        f"Getting evnex charge point data for '{charge_point.name}'")
+                        f"Getting evnex charge point data for '{charge_point.name}'"
+                    )
                     # Migrated to v3 charge point detail which includes more info
-                    api_v3_response = await evnex_client.get_charge_point_detail_v3(charge_point_id=charge_point.id)
-                    charge_point_detail: EvnexChargePointDetail = api_v3_response.data.attributes
+                    api_v3_response = await evnex_client.get_charge_point_detail_v3(
+                        charge_point_id=charge_point.id
+                    )
+                    charge_point_detail: EvnexChargePointDetail = (
+                        api_v3_response.data.attributes
+                    )
 
                     for connector_brief in charge_point_detail.connectors:
-                        data['connector_brief'][(
-                            charge_point.id, connector_brief.connectorId)] = connector_brief
+                        data["connector_brief"][
+                            (charge_point.id, connector_brief.connectorId)
+                        ] = connector_brief
 
                     _LOGGER.debug(
-                        f"Getting evnex charge point transactions for '{charge_point.name}'")
-                    charge_point_transactions = await evnex_client.get_charge_point_transactions(charge_point_id=charge_point.id)
+                        f"Getting evnex charge point sessions for '{charge_point.name}'"
+                    )
+                    charge_point_sessions = (
+                        await evnex_client.get_charge_point_sessions(
+                            charge_point_id=charge_point.id
+                        )
+                    )
 
                     # Only get the charge point override if the charge point is online!
                     if charge_point_detail.networkStatus == "ONLINE":
                         _LOGGER.debug(
-                            f"Getting evnex charge point override for '{charge_point.name}'")
-                        charge_point_override: EvnexChargePointOverrideConfig = await evnex_client.get_charge_point_override(
-                            charge_point_id=charge_point.id
+                            f"Getting evnex charge point override for '{charge_point.name}'"
+                        )
+                        charge_point_override: EvnexChargePointOverrideConfig = (
+                            await evnex_client.get_charge_point_override(
+                                charge_point_id=charge_point.id
+                            )
                         )
                     else:
                         _LOGGER.debug(
-                            "Not getting charge point override as charge point is not ONLINE")
+                            "Not getting charge point override as charge point is not ONLINE"
+                        )
                         charge_point_override = None
 
-                    data['charge_point_brief'][charge_point.id] = charge_point
-                    data['charge_point_details'][charge_point.id] = charge_point_detail
-                    data['charge_point_override'][charge_point.id] = charge_point_override
-                    data['charge_point_transactions'][charge_point.id] = charge_point_transactions
+                    data["charge_point_brief"][charge_point.id] = charge_point
+                    data["charge_point_details"][charge_point.id] = charge_point_detail
+                    data["charge_point_override"][
+                        charge_point.id
+                    ] = charge_point_override
+                    data["charge_point_sessions"][
+                        charge_point.id
+                    ] = charge_point_sessions
 
             return data
         except NotAuthorizedException:
@@ -196,7 +227,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 _LOGGER.debug("Refreshing auth and trying again")
                 await hass.async_add_executor_job(evnex_client.authenticate)
                 persist_evnex_auth_tokens(
-                    hass, entry, evnex_client.id_token, evnex_client.refresh_token, evnex_client.access_token)
+                    hass,
+                    entry,
+                    evnex_client.id_token,
+                    evnex_client.refresh_token,
+                    evnex_client.access_token,
+                )
                 return await async_update_data(is_retry=True)
             _LOGGER.warning(
                 "EVNEX Session Token is invalid and failed attempt to re-login"
@@ -227,7 +263,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await coordinator.async_config_entry_first_refresh()
 
     # Setup components
-    #hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    # hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

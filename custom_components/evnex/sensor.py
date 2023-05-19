@@ -4,7 +4,7 @@ import logging
 from dataclasses import dataclass
 from typing import Callable, Optional, Union
 
-from evnex.schema.charge_points import EvnexChargePoint, EvnexChargePointTransaction
+from evnex.schema.charge_points import EvnexChargePoint, EvnexChargePointSession
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,9 +14,15 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE, ELECTRIC_POTENTIAL_VOLT, ENERGY_KILO_WATT_HOUR, ENERGY_WATT_HOUR, FREQUENCY_HERTZ, PERCENTAGE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
+    FREQUENCY_HERTZ,
+    PERCENTAGE,
     CURRENCY_DOLLAR,
-    POWER_KILO_WATT, POWER_WATT,
+    POWER_KILO_WATT,
+    POWER_WATT,
     STATE_UNAVAILABLE,
     STATE_ON,
     STATE_OFF,
@@ -34,7 +40,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EvnexOrgWidePowerUsageSensorToday(EvnexOrgEntity, SensorEntity):
-
     entity_description = SensorEntityDescription(
         key="org_wide_power_usage_today",
         name="Total Power Usage Today",
@@ -47,19 +52,18 @@ class EvnexOrgWidePowerUsageSensorToday(EvnexOrgEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self.coordinator.data['org_insights'][self.org_id][-1].powerUsage
+        return self.coordinator.data["org_insights"][self.org_id][-1].powerUsage
 
     @property
     def last_reset(self):
-        return self.coordinator.data['org_insights'][self.org_id][-1].startDate
+        return self.coordinator.data["org_insights"][self.org_id][-1].startDate
 
 
 class EvnexOrgWideChargeSessionsCountSensor(EvnexOrgEntity, SensorEntity):
-
     entity_description = SensorEntityDescription(
         key="org_wide_charger_sessions_today",
         name="Charger sessions today",
-        native_unit_of_measurement='sessions',
+        native_unit_of_measurement="sessions",
         icon="mdi:repeat_one",
         state_class=SensorStateClass.TOTAL,
     )
@@ -67,15 +71,14 @@ class EvnexOrgWideChargeSessionsCountSensor(EvnexOrgEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self.coordinator.data['org_insights'][self.org_id][-1].sessions
+        return self.coordinator.data["org_insights"][self.org_id][-1].sessions
 
     @property
     def last_reset(self):
-        return self.coordinator.data['org_insights'][self.org_id][-1].startDate
+        return self.coordinator.data["org_insights"][self.org_id][-1].startDate
 
 
 class EvnexOrgTierSensor(EvnexOrgEntity, SensorEntity):
-
     entity_description = SensorEntityDescription(
         key="org_tier",
         name="Organisation tier",
@@ -85,7 +88,7 @@ class EvnexOrgTierSensor(EvnexOrgEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self.coordinator.data['org_briefs'][self.org_id].tier
+        return self.coordinator.data["org_briefs"][self.org_id].tier
 
 
 class EvnexChargerNetworkStatusSensor(EvnexChargerEntity, SensorEntity):
@@ -97,8 +100,9 @@ class EvnexChargerNetworkStatusSensor(EvnexChargerEntity, SensorEntity):
 
     @property
     def native_value(self):
-        charger_brief: EvnexChargePoint = self.coordinator.data[
-            'charge_point_brief'][self.charger_id]
+        charger_brief: EvnexChargePoint = self.coordinator.data["charge_point_brief"][
+            self.charger_id
+        ]
         return charger_brief.networkStatus
 
 
@@ -115,10 +119,11 @@ class EvnexChargerSessionEnergy(EvnexChargerEntity, SensorEntity):
 
     @property
     def native_value(self):
-        t: EvnexChargePointTransaction = self.coordinator.data[
-            'charge_point_transactions'][self.charger_id][0]
-        if t.endDate is None:
-            return t.powerUsage
+        t: EvnexChargePointSession = self.coordinator.data["charge_point_sessions"][
+            self.charger_id
+        ][0]
+        if t.attributes.endDate is None:
+            return t.attributes.totalPowerUsage
         else:
             return 0.0
 
@@ -135,10 +140,11 @@ class EvnexChargerSessionCost(EvnexChargerEntity, SensorEntity):
 
     @property
     def native_value(self):
-        t: EvnexChargePointTransaction = self.coordinator.data[
-            'charge_point_transactions'][self.charger_id][0]
-        if t.endDate is None and t.electricityCost is not None:
-            return t.electricityCost.cost
+        t: EvnexChargePointSession = self.coordinator.data["charge_point_sessions"][
+            self.charger_id
+        ][0]
+        if t.attributes.endDate is None and t.attributes.electricityCost is not None:
+            return t.attributes.totalCost.amount
         else:
             return 0.0
 
@@ -154,17 +160,17 @@ class EvnexChargerSessionTime(EvnexChargerEntity, SensorEntity):
 
     @property
     def native_value(self):
-        t: EvnexChargePointTransaction = self.coordinator.data[
-            'charge_point_transactions'][self.charger_id][0]
-        if t.endDate is None:
+        t: EvnexChargePointSession = self.coordinator.data["charge_point_sessions"][
+            self.charger_id
+        ][0]
+        if t.attributes.endDate is None:
             now = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
-            return (now - t.startDate).total_seconds()
+            return (now - t.attributes.startDate).total_seconds()
         else:
-            return (t.endDate - t.startDate).total_seconds()
+            return (t.attributes.endDate - t.attributes.startDate).total_seconds()
 
 
 class EvnexChargerLastSessionStartTime(EvnexChargerEntity, SensorEntity):
-
     entity_description = SensorEntityDescription(
         key="session_start_time",
         name="Last Session Start",
@@ -174,13 +180,15 @@ class EvnexChargerLastSessionStartTime(EvnexChargerEntity, SensorEntity):
 
     @property
     def native_value(self):
-        t: EvnexChargePointTransaction = self.coordinator.data[
-            'charge_point_transactions'][self.charger_id][0]
-        return t.startDate
+        t: EvnexChargePointSession = self.coordinator.data["charge_point_sessions"][
+            self.charger_id
+        ][0]
+        return t.attributes.startDate
 
 
-class EvnexChargePortConnectorStatusSensor(EvnexChargePointConnectorEntity, SensorEntity):
-
+class EvnexChargePortConnectorStatusSensor(
+    EvnexChargePointConnectorEntity, SensorEntity
+):
     entity_description = SensorEntityDescription(
         key="connector_status",
         name="Connector Status",
@@ -188,8 +196,9 @@ class EvnexChargePortConnectorStatusSensor(EvnexChargePointConnectorEntity, Sens
 
     @property
     def native_value(self):
-        brief = self.coordinator.data['connector_brief'][(
-            self.charger_id, self.connector_id)]
+        brief = self.coordinator.data["connector_brief"][
+            (self.charger_id, self.connector_id)
+        ]
         return brief.ocppStatus
 
     @property
@@ -206,8 +215,9 @@ class EvnexChargePortConnectorStatusSensor(EvnexChargePointConnectorEntity, Sens
         return icon
 
 
-class EvnexChargePortConnectorVoltageSensor(EvnexChargePointConnectorEntity, SensorEntity):
-
+class EvnexChargePortConnectorVoltageSensor(
+    EvnexChargePointConnectorEntity, SensorEntity
+):
     entity_description = SensorEntityDescription(
         key="connector_voltage",
         name="VoltageL1N",
@@ -219,13 +229,15 @@ class EvnexChargePortConnectorVoltageSensor(EvnexChargePointConnectorEntity, Sen
 
     @property
     def native_value(self):
-        brief = self.coordinator.data['connector_brief'][(
-            self.charger_id, self.connector_id)]
+        brief = self.coordinator.data["connector_brief"][
+            (self.charger_id, self.connector_id)
+        ]
         return brief.meter.voltageL1N
 
 
-class EvnexChargePortConnectorCurrentSensor(EvnexChargePointConnectorEntity, SensorEntity):
-
+class EvnexChargePortConnectorCurrentSensor(
+    EvnexChargePointConnectorEntity, SensorEntity
+):
     entity_description = SensorEntityDescription(
         key="connector_current",
         name="CurrentL1",
@@ -237,13 +249,15 @@ class EvnexChargePortConnectorCurrentSensor(EvnexChargePointConnectorEntity, Sen
 
     @property
     def native_value(self):
-        brief = self.coordinator.data['connector_brief'][(
-            self.charger_id, self.connector_id)]
+        brief = self.coordinator.data["connector_brief"][
+            (self.charger_id, self.connector_id)
+        ]
         return brief.meter.currentL1
 
 
-class EvnexChargePortConnectorPowerSensor(EvnexChargePointConnectorEntity, SensorEntity):
-
+class EvnexChargePortConnectorPowerSensor(
+    EvnexChargePointConnectorEntity, SensorEntity
+):
     entity_description = SensorEntityDescription(
         key="connector_power",
         name="Metered Power",
@@ -255,13 +269,15 @@ class EvnexChargePortConnectorPowerSensor(EvnexChargePointConnectorEntity, Senso
 
     @property
     def native_value(self):
-        brief = self.coordinator.data['connector_brief'][(
-            self.charger_id, self.connector_id)]
+        brief = self.coordinator.data["connector_brief"][
+            (self.charger_id, self.connector_id)
+        ]
         return brief.meter.power / 1000
 
 
-class EvnexChargePortConnectorFrequencySensor(EvnexChargePointConnectorEntity, SensorEntity):
-
+class EvnexChargePortConnectorFrequencySensor(
+    EvnexChargePointConnectorEntity, SensorEntity
+):
     entity_description = SensorEntityDescription(
         key="connector_frequency",
         name="Metered Frequency",
@@ -273,8 +289,9 @@ class EvnexChargePortConnectorFrequencySensor(EvnexChargePointConnectorEntity, S
 
     @property
     def native_value(self):
-        brief = self.coordinator.data['connector_brief'][(
-            self.charger_id, self.connector_id)]
+        brief = self.coordinator.data["connector_brief"][
+            (self.charger_id, self.connector_id)
+        ]
         return brief.meter.frequency
 
 
@@ -285,7 +302,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
 
-    #client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    # client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
 
     entities: list[SensorEntity] = []
@@ -295,30 +312,42 @@ async def async_setup_entry(
     entities.append(EvnexOrgWideChargeSessionsCountSensor(coordinator=coordinator))
     entities.append(EvnexOrgTierSensor(coordinator=coordinator))
 
-    for charger_id in coordinator.data['charge_point_brief']:
-
-        entities.append(EvnexChargerNetworkStatusSensor(
-            coordinator, charger_id))
+    for charger_id in coordinator.data["charge_point_brief"]:
+        entities.append(EvnexChargerNetworkStatusSensor(coordinator, charger_id))
 
         entities.append(EvnexChargerSessionEnergy(coordinator, charger_id))
         entities.append(EvnexChargerSessionCost(coordinator, charger_id))
         entities.append(EvnexChargerSessionTime(coordinator, charger_id))
-        entities.append(EvnexChargerLastSessionStartTime(
-            coordinator, charger_id))
+        entities.append(EvnexChargerLastSessionStartTime(coordinator, charger_id))
 
-        charger_brief = coordinator.data['charge_point_brief'][charger_id]
+        charger_brief = coordinator.data["charge_point_brief"][charger_id]
         for connector_brief in charger_brief.connectors:
             connector_id = connector_brief.connectorId
 
-            entities.append(EvnexChargePortConnectorStatusSensor(
-                coordinator, charger_id, connector_id))
-            entities.append(EvnexChargePortConnectorVoltageSensor(
-                coordinator, charger_id, connector_id))
-            entities.append(EvnexChargePortConnectorCurrentSensor(
-                coordinator, charger_id, connector_id))
-            entities.append(EvnexChargePortConnectorPowerSensor(
-                coordinator, charger_id, connector_id))
-            entities.append(EvnexChargePortConnectorFrequencySensor(
-                coordinator, charger_id, connector_id))
+            entities.append(
+                EvnexChargePortConnectorStatusSensor(
+                    coordinator, charger_id, connector_id
+                )
+            )
+            entities.append(
+                EvnexChargePortConnectorVoltageSensor(
+                    coordinator, charger_id, connector_id
+                )
+            )
+            entities.append(
+                EvnexChargePortConnectorCurrentSensor(
+                    coordinator, charger_id, connector_id
+                )
+            )
+            entities.append(
+                EvnexChargePortConnectorPowerSensor(
+                    coordinator, charger_id, connector_id
+                )
+            )
+            entities.append(
+                EvnexChargePortConnectorFrequencySensor(
+                    coordinator, charger_id, connector_id
+                )
+            )
 
     async_add_entities(entities)

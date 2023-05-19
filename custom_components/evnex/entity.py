@@ -1,8 +1,15 @@
-from evnex.schema.charge_points import EvnexChargePoint, EvnexChargePointConnector, EvnexChargePointDetail, \
-    EvnexChargePointTransaction
+from evnex.schema.charge_points import (
+    EvnexChargePoint,
+    EvnexChargePointConnector,
+    EvnexChargePointDetail,
+)
+from evnex.schema.v3.charge_points import EvnexChargePointSession
 from evnex.schema.org import EvnexOrgBrief
 from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN, NAME
 
@@ -16,9 +23,9 @@ class EvnexOrgEntity(CoordinatorEntity):
         """Initialize an Evnex Org"""
         super().__init__(coordinator)
         if org_id is None:
-            org_id = coordinator.data['user'].organisations[0].id
+            org_id = coordinator.data["user"].organisations[0].id
         self.org_id = org_id
-        self.org_brief: EvnexOrgBrief = coordinator.data['org_briefs'][org_id]
+        self.org_brief: EvnexOrgBrief = coordinator.data["org_briefs"][org_id]
 
         self.device_name = self.org_brief.name
         self.device_id = self.org_brief.id
@@ -47,14 +54,20 @@ class EvnexChargerEntity(CoordinatorEntity):
         """Initialize the ChargePoint entity."""
         super().__init__(coordinator)
 
-        self.charge_point_brief: EvnexChargePoint = coordinator.data['charge_point_brief'][charger_id]
+        self.charge_point_brief: EvnexChargePoint = coordinator.data[
+            "charge_point_brief"
+        ][charger_id]
 
         self.connector_brief_by_id = {
             brief.connectorId: brief for brief in self.charge_point_brief.connectors
         }
 
-        self.charge_point_detail: EvnexChargePointDetail = coordinator.data['charge_point_details'][charger_id]
-        self.charge_point_transactions: list[EvnexChargePointTransaction] = coordinator.data['charge_point_transactions'][charger_id]
+        self.charge_point_detail: EvnexChargePointDetail = coordinator.data[
+            "charge_point_details"
+        ][charger_id]
+        self.charge_point_sessions: list[EvnexChargePointSession] = coordinator.data[
+            "charge_point_sessions"
+        ][charger_id]
 
         self.device_name = self.charge_point_brief.name
         self.charger_id = charger_id
@@ -83,21 +96,28 @@ class EvnexChargerEntity(CoordinatorEntity):
 
     @property
     def charger_status(self) -> EvnexChargePointDetail:
-        return self.coordinator.data['charge_point_details'][self.charger_id]
+        return self.coordinator.data["charge_point_details"][self.charger_id]
 
     @property
     def technical_info(self) -> EvnexChargePoint:
-        return self.coordinator.data['charge_point_brief'][self.charger_id]
+        return self.coordinator.data["charge_point_brief"][self.charger_id]
 
 
 class EvnexChargePointConnectorEntity(EvnexChargerEntity):
     """Base Entity for a specific evnex charger's connector"""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, charger_id: str, connector_id: str = '1'):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        charger_id: str,
+        connector_id: str = "1",
+    ):
         """Initialize the Charge Point Connector entity."""
         super().__init__(coordinator, charger_id=charger_id)
         self.connector_id = connector_id
-        self.connector_brief: EvnexChargePointConnector = self.connector_brief_by_id[connector_id]
+        self.connector_brief: EvnexChargePointConnector = self.connector_brief_by_id[
+            connector_id
+        ]
 
     # Icon based on connector type? mdi:ev-plug-type2
     # @property
