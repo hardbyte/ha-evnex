@@ -3,10 +3,10 @@
   "name": "Evnex EV Charger",
   "issue_tracker": "https://github.com/hardbyte/ha-evnex/issues",
   "config_flow": true,
-  "version": "0.2.5-beta.1",
+  "version": "0.3.0",
   "documentation": "https://github.com/hardbyte/ha-evnex",
   "requirements": [
-    "evnex==0.2.14"
+    "evnex==0.3.1"
   ],
   "codeowners": [
     "@hardbyte"
