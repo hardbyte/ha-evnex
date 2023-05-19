@@ -2,9 +2,17 @@ name: "Validation And Formatting"
 on:
   push:
   pull_request:
-  schedule:
-    - cron: '0 0 * * *'
+
 jobs:
+  lint:
+    name: Code Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      #- uses: chartboost/ruff-action@v1
+      - name: Check formatting
+        uses: psf/black@stable
+
   ci:
     runs-on: ubuntu-latest
     steps:
