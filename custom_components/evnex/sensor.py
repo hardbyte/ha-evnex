@@ -1,11 +1,10 @@
 """Sensor platform for evnex."""
 import datetime
 import logging
-from dataclasses import dataclass
-from typing import Callable, Optional, Union
 
-from evnex.schema.charge_points import EvnexChargePoint, EvnexChargePointSession
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from evnex.schema.charge_points import EvnexChargePoint
+from evnex.schema.v3.charge_points import EvnexChargePointSession
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
