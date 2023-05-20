@@ -42,20 +42,21 @@ async def async_setup_entry(
     evnex_api_client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
 
-    brief = coordinator.data['charge_point_brief']
+    brief = coordinator.data["charge_point_brief"]
     for charger_id in brief:
-        connector_brief = coordinator.data['connector_brief']
+        connector_brief = coordinator.data["connector_brief"]
         description = EvnexNumberDescription(
             key="charger_maximum_current",
             name="Charger Maximum Current",
             icon="mdi:ev-station",
-            initial_value=connector_brief[(charger_id, '1')].maxAmperage,
+            initial_value=connector_brief[(charger_id, "1")].maxAmperage,
             native_min_value=0,
-            native_max_value=connector_brief[(charger_id, '1')].maxAmperage,
+            native_max_value=connector_brief[(charger_id, "1")].maxAmperage,
             native_step=1,
         )
-        entities.append(EvnexNumber(
-            evnex_api_client, coordinator, charger_id, description))
+        entities.append(
+            EvnexNumber(evnex_api_client, coordinator, charger_id, description)
+        )
 
     async_add_entities(entities)
 
@@ -90,7 +91,7 @@ class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return not self.coordinator.data['charge_point_brief'][self.charger_id] == "OFFLINE"  # type: ignore [no-any-return]
+        return not self.coordinator.data["charge_point_brief"][self.charger_id] == "OFFLINE"  # type: ignore [no-any-return]
 
     async def async_set_native_value(self, value):
         """Set new value."""
@@ -102,7 +103,7 @@ class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
             charging_profile_periods=[{"limit": num_value, "start": 0}],
             enabled=True,
             duration=86400,
-            units="A"
+            units="A",
         )
 
         if isinstance(resp, EvnexChargePointLoadSchedule):
