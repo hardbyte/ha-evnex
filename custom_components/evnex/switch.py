@@ -13,7 +13,7 @@ from custom_components.evnex.entity import (
     EvnexChargePointConnectorEntity,
     EvnexChargerEntity,
 )
-from evnex import Evnex
+from evnex.api import Evnex
 from evnex.schema.charge_points import EvnexChargePoint
 from evnex.schema.v3.charge_points import (
     EvnexChargePointConnector,
