@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from custom_components.evnex import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 from custom_components.evnex.const import DATA_UPDATED
 from custom_components.evnex.entity import EvnexChargePointConnectorEntity
-from evnex import Evnex
+from evnex.api import Evnex
 from evnex.schema.charge_points import EvnexChargePointLoadSchedule
 
 _LOGGER = logging.getLogger(__name__)
