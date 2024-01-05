@@ -6,8 +6,8 @@
   ],
   "config_flow": true,
   "documentation": "https://github.com/hardbyte/ha-evnex",
-  "iot_class": "cloud_polling",
   "integration_type": "device",
+  "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/hardbyte/ha-evnex/issues",
   "loggers": [
     "evnex"
