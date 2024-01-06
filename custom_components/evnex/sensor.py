@@ -5,6 +5,8 @@ import logging
 from evnex.schema.charge_points import EvnexChargePoint
 from evnex.schema.v3.charge_points import EvnexChargePointSession
 
+from homeassistant.const import UnitOfElectricCurrent
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -13,18 +15,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
-    PERCENTAGE,
-    CURRENCY_DOLLAR,
     POWER_KILO_WATT,
-    POWER_WATT,
-    STATE_UNAVAILABLE,
-    STATE_ON,
-    STATE_OFF,
     TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant
@@ -241,7 +236,7 @@ class EvnexChargePortConnectorCurrentSensor(
         key="connector_current",
         name="CurrentL1",
         device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         icon="mdi:lightning-bolt",
         state_class=SensorStateClass.MEASUREMENT,
     )

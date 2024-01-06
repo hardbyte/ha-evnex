@@ -5,7 +5,7 @@ from evnex.schema.charge_points import (
 )
 from evnex.schema.v3.charge_points import EvnexChargePointSession
 from evnex.schema.org import EvnexOrgBrief
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,

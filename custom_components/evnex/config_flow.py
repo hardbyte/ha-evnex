@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
 from evnex.api import Evnex
 from evnex.errors import NotAuthorizedException
@@ -38,7 +38,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         )
 
         user_data = await evnex_client.get_user_detail()
-        logger.info(f"Have initial user data from evnex cloud API")
+        logger.info("Have initial user data from evnex cloud API")
 
     except NotAuthorizedException:
         raise InvalidAuth
