@@ -14,10 +14,8 @@ from custom_components.evnex.entity import (
     EvnexChargerEntity,
 )
 from evnex.api import Evnex
-from evnex.schema.charge_points import EvnexChargePoint
 from evnex.schema.v3.charge_points import (
     EvnexChargePointConnector,
-    EvnexChargePointDetail,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,17 +81,15 @@ class EvnexChargerAvailabilitySwitch(EvnexChargePointConnectorEntity, SwitchEnti
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        charge_point_brief: EvnexChargePoint = self.coordinator.data[
-            "charge_point_brief"
-        ][self.charger_id]
-        charge_point_details: EvnexChargePointDetail = self.coordinator.data[
-            "charge_point_details"
-        ][self.charger_id]
-
-        return True
         # TODO
-
+        # charge_point_brief: EvnexChargePoint = self.coordinator.data[
+        #     "charge_point_brief"
+        # ][self.charger_id]
+        # charge_point_details: EvnexChargePointDetail = self.coordinator.data[
+        #     "charge_point_details"
+        # ][self.charger_id]
         # return not charge_point_brief == "OFFLINE"  # type: ignore [no-any-return]
+        return True
 
     @property
     def icon(self):
