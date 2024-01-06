@@ -15,18 +15,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
-    PERCENTAGE,
-    CURRENCY_DOLLAR,
     POWER_KILO_WATT,
-    POWER_WATT,
-    STATE_UNAVAILABLE,
-    STATE_ON,
-    STATE_OFF,
     TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant

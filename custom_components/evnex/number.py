@@ -91,7 +91,10 @@ class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return not self.coordinator.data["charge_point_brief"][self.charger_id] == "OFFLINE"  # type: ignore [no-any-return]
+        return (
+            not self.coordinator.data["charge_point_brief"][self.charger_id]
+            == "OFFLINE"
+        )  # type: ignore [no-any-return]
 
     async def async_set_native_value(self, value):
         """Set new value."""
