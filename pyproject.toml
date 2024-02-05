@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "evnex-ha"
-version = "0.5.1"
+version = "0.5.2"
 description = ""
 authors = ["Brian Thorne <brian@thorne.link>"]
 
