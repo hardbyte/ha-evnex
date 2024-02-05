@@ -15,12 +15,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
-    FREQUENCY_HERTZ,
-    POWER_KILO_WATT,
-    TIME_SECONDS,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfFrequency,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 
@@ -37,7 +36,7 @@ class EvnexOrgWidePowerUsageSensorToday(EvnexOrgEntity, SensorEntity):
     entity_description = SensorEntityDescription(
         key="org_wide_power_usage_today",
         name="Total Power Usage Today",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         icon="mdi:lightning-bolt-circle",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
@@ -107,8 +106,8 @@ class EvnexChargerSessionEnergy(EvnexChargerEntity, SensorEntity):
         icon="mdi:lightning-bolt-circle",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
-        unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     )
 
     @property
@@ -128,7 +127,7 @@ class EvnexChargerSessionCost(EvnexChargerEntity, SensorEntity):
         name="Charge Cost",
         icon="mdi:cash-multiple",
         # native_unit_of_measurement=CURRENCY_DOLLAR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
     )
 
@@ -148,7 +147,7 @@ class EvnexChargerSessionTime(EvnexChargerEntity, SensorEntity):
         key="session_time",
         name="Charge Time",
         icon="mdi:timer",
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         device_class=SensorDeviceClass.DURATION,
     )
 
@@ -216,7 +215,7 @@ class EvnexChargePortConnectorVoltageSensor(
         key="connector_voltage",
         name="VoltageL1N",
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         icon="mdi:lightning-bolt",
         state_class=SensorStateClass.MEASUREMENT,
     )
@@ -256,7 +255,7 @@ class EvnexChargePortConnectorPowerSensor(
         key="connector_power",
         name="Metered Power",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         icon="mdi:flash-triangle",
         state_class=SensorStateClass.MEASUREMENT,
     )
@@ -276,7 +275,7 @@ class EvnexChargePortConnectorFrequencySensor(
         key="connector_frequency",
         name="Metered Frequency",
         device_class=SensorDeviceClass.FREQUENCY,
-        native_unit_of_measurement=FREQUENCY_HERTZ,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
         icon="mdi:sine-wave",
         state_class=SensorStateClass.MEASUREMENT,
     )

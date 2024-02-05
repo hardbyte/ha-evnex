@@ -30,9 +30,6 @@ class EvnexOrgEntity(CoordinatorEntity):
         self.device_name = self.org_brief.name
         self.device_id = self.org_brief.id
 
-    @property
-    def _attr_unique_id(self):
-        return self.org_id + self.entity_description.key
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -74,12 +71,6 @@ class EvnexChargerEntity(CoordinatorEntity):
         self.manufacturer = "evnex"
         self.short_charger_model = self.charge_point_brief.details.model
 
-    @property
-    def _attr_unique_id(self):
-        try:
-            return self.charger_id + self.entity_description.key
-        except AttributeError:
-            return self.charger_id + self.__class__.__name__
 
     @property
     def device_info(self) -> DeviceInfo:
