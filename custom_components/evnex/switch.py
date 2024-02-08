@@ -1,7 +1,6 @@
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -28,7 +27,7 @@ class EvnexChargerOverrideSwitch(EvnexChargerEntity, SwitchEntity):
 
         super().__init__(coordinator=coordinator, charger_id=charger_id)
 
-    entity_description = SensorEntityDescription(
+    entity_description = SwitchEntityDescription(
         key="charger_charge_now_switch",
         name="Charge Now",
     )
@@ -68,15 +67,15 @@ class EvnexChargerAvailabilitySwitch(EvnexChargePointConnectorEntity, SwitchEnti
     def __init__(self, api_client, coordinator, charger_id, connector_id="1"):
         """Initialise the switch."""
         self.evnex: Evnex = api_client
+        self.entity_description = SwitchEntityDescription(
+            key="_".join(["connector", connector_id, "availability_switch"]),
+            name=f"Connector {connector_id} Availability",
+        )
 
         super().__init__(
             coordinator=coordinator, charger_id=charger_id, connector_id=connector_id
         )
 
-        self.entity_description = SwitchEntityDescription(
-            key="_".join(["connector", self.connector_id, "availability_switch"]),
-            name=f"Connector {self.connector_id} Availability",
-        )
 
     @property
     def available(self) -> bool:
