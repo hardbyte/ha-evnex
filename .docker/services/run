@@ -2,6 +2,7 @@
 # ==============================================================================
 # Start Home Assistant service
 # ==============================================================================
+bashio::log.green "Installing evnex library for Home Assistant Core..."
 
 cd /config || bashio::exit.nok "Can't find config folder!"
 
