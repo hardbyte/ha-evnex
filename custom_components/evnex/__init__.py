@@ -182,9 +182,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                         api_v3_response.data.attributes
                     )
 
-                    for connector_brief in charge_point_detail.connectors:
+                    for connector_brief in charge_point_detail["connectors"]:
                         data["connector_brief"][
-                            (charge_point.id, connector_brief.connectorId)
+                            (charge_point.id, connector_brief["connectorId"])
                         ] = connector_brief
 
                     _LOGGER.debug(
@@ -197,7 +197,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     )
 
                     # Only get the charge point override if the charge point is online!
-                    if charge_point_detail.networkStatus == "ONLINE":
+                    if charge_point_detail["networkStatus"] == "ONLINE":
                         _LOGGER.debug(
                             f"Getting evnex charge point override for '{charge_point.name}'"
                         )
