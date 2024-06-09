@@ -101,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     password = entry.data[CONF_PASSWORD]
 
     # Load tokens from storage
-    evnex_auth_tokens = retrieve_evnex_auth_tokens(hass, entry)
+    evnex_auth_tokens = await hass.async_add_executor_job(retrieve_evnex_auth_tokens, hass, entry)
     evnex_auth_tokens = {} if evnex_auth_tokens is None else evnex_auth_tokens
 
     httpx_client = get_async_client(hass)
@@ -147,7 +147,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
             account: EvnexUserDetail = await evnex_client.get_user_detail()
 
-            persist_evnex_auth_tokens(
+            await hass.async_add_executor_job(
+                persist_evnex_auth_tokens,
                 hass,
                 entry,
                 evnex_client.id_token,
@@ -226,7 +227,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             if not is_retry:
                 _LOGGER.debug("Refreshing auth and trying again")
                 await hass.async_add_executor_job(evnex_client.authenticate)
-                persist_evnex_auth_tokens(
+                await hass.async_add_executor_job(
+                    persist_evnex_auth_tokens,
                     hass,
                     entry,
                     evnex_client.id_token,
