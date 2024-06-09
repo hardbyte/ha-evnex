@@ -99,7 +99,7 @@ class EvnexChargerAvailabilitySwitch(EvnexChargePointConnectorEntity, SwitchEnti
         brief: EvnexChargePointConnector = self.coordinator.data["connector_brief"][
             (self.charger_id, self.connector_id)
         ]
-        return brief is not None and brief.ocppStatus == "AVAILABLE"
+        return brief is not None and brief["ocppStatus"] == "AVAILABLE"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Change to available ie Operative."""

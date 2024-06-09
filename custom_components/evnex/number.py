@@ -49,9 +49,9 @@ async def async_setup_entry(
             key="charger_maximum_current",
             name="Charger Maximum Current",
             icon="mdi:ev-station",
-            initial_value=connector_brief[(charger_id, "1")].maxAmperage,
+            initial_value=connector_brief[(charger_id, "1")]["maxAmperage"],
             native_min_value=0,
-            native_max_value=connector_brief[(charger_id, "1")].maxAmperage,
+            native_max_value=connector_brief[(charger_id, "1")]["maxAmperage"],
             native_step=1,
         )
         entities.append(
