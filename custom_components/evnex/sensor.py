@@ -225,7 +225,7 @@ class EvnexChargePortConnectorVoltageSensor(
         brief = self.coordinator.data["connector_brief"][
             (self.charger_id, self.connector_id)
         ]
-        return brief["meter"]["voltageL1N"]
+        return brief["meter"].get("voltageL1N")
 
 
 class EvnexChargePortConnectorCurrentSensor(
@@ -245,7 +245,7 @@ class EvnexChargePortConnectorCurrentSensor(
         brief = self.coordinator.data["connector_brief"][
             (self.charger_id, self.connector_id)
         ]
-        return brief["meter"]["currentL1"]
+        return brief["meter"].get("currentL1")
 
 
 class EvnexChargePortConnectorPowerSensor(
@@ -265,7 +265,7 @@ class EvnexChargePortConnectorPowerSensor(
         brief = self.coordinator.data["connector_brief"][
             (self.charger_id, self.connector_id)
         ]
-        return brief["meter"]["power"] / 1000
+        return brief["meter"].get("power", 0) / 1000
 
 
 class EvnexChargePortConnectorFrequencySensor(
