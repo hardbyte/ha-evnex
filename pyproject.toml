@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "evnex-ha"
-version = "0.6.0a2"
+version = "0.6.0a3"
 description = "Home Assistant integration for EVNEX EV chargers"
 authors = ["Brian Thorne <brian@thorne.link>"]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
 homeassistant = ">2024.1.0"
-evnex = ">0.4.1"
+evnex = "~0.4.1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.4"
