@@ -9,7 +9,7 @@ Adds a device for the Evnex cloud account, as well as any chargers you have acce
 
 ## Install
 
-Available as a default integration in HACS.
+Available as an integration in HACS.
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=hardbyte&repository=ha-evnex&category=integration)
 
@@ -31,3 +31,4 @@ Each charger device exposes:
 ## Development
 
 Uses https://github.com/hardbyte/python-evnex
+
