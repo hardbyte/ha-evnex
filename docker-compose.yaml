@@ -1,7 +1,7 @@
 services:
   homeassistant:
     container_name: home-assistant
-    image: homeassistant/home-assistant:2024.6
+    image: homeassistant/home-assistant:2024.11
     volumes:
       - ./.docker/data:/config
       - ./custom_components/evnex:/config/custom_components/evnex

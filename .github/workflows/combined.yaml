@@ -32,4 +32,4 @@ jobs:
       - uses: "home-assistant/actions/hassfest@master"
       - uses: hacs/action@main
         with:
-          CATEGORY: integration
+          category: integration
