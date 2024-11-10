@@ -1,6 +1,6 @@
 [project]
 name = "evnex-ha"
-version = "0.6.0a4"
+version = "0.6.0"
 description = "Home Assistant integration for EVNEX EV chargers"
 authors = [
     {name = "Brian Thorne", email = "brian@hardbyte.nz"},
