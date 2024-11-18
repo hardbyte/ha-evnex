@@ -9,9 +9,13 @@ Adds a device for the Evnex cloud account, as well as any chargers you have acce
 
 ## Install
 
-Available as a default integration in HACS.
+Available as an integration in HACS.
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=hardbyte&repository=ha-evnex&category=integration)
+
+
+Since version `0.6.0` this integration requires Pydantic >2.0, some versions of Home Assistant may not have this version 
+available, you may need to install it manually e.g. with `pip install -U pydantic`.
 
 
 ## Sensors
@@ -31,3 +35,4 @@ Each charger device exposes:
 ## Development
 
 Uses https://github.com/hardbyte/python-evnex
+
