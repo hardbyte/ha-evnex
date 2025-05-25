@@ -134,17 +134,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             "user": None,
             "org_briefs": {},  # by org_id
             "org_insights": {},  # by org_id
-            "charge_points": {},  # by_org_id
+            "charge_points_by_org": {},  # by_org_id -> list of CPs
             "charge_point_brief": {},  # by cp_id
             "charge_point_details": {},  # by cp_id
             "charge_point_override": {},  # by cp_id
             "charge_point_sessions": {},  # by cp_id
             "connector_brief": {},  # by (cp_id, connectorId)
+            "charge_point_to_org_map": {}, # by cp_id -> org_id
         }
 
         try:
             _LOGGER.info("Getting evnex user detail")
-
             account: EvnexUserDetail = await evnex_client.get_user_detail()
 
             await hass.async_add_executor_job(
@@ -159,23 +159,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             data["user"] = account
 
             for org in account.organisations:
-                _LOGGER.info(f"Getting evnex charge points for '{org.name}'")
+                _LOGGER.info(f"Getting evnex charge points for '{org.name}' (Org ID: {org.id}, Slug: {org.slug})")
                 charge_points: list[
                     EvnexChargePoint
-                ] = await evnex_client.get_org_charge_points(org.slug)
-                data["charge_points"][org.id] = [cp for cp in charge_points]
+                ] = await evnex_client.get_org_charge_points(org.id)
+                data["charge_points_by_org"][org.id] = [cp for cp in charge_points]
                 data["org_briefs"][org.id] = org
                 _LOGGER.debug(f"Getting evnex org insights for {org.name}")
                 daily_insights = await evnex_client.get_org_insight(
-                    days=7, org_id=org.slug
+                    days=7, org_id=org.id
                 )
                 data["org_insights"][org.id] = daily_insights
 
                 for charge_point in charge_points:
-                    _LOGGER.debug(
-                        f"Getting evnex charge point data for '{charge_point.name}'"
-                    )
-                    # Migrated to v3 charge point detail which includes more info
+                    data["charge_point_to_org_map"][charge_point.id] = org.id # Map charge_point.id back to org.id
+
+                    _LOGGER.debug(f"Getting evnex charge point data for '{charge_point.name}'")
                     api_v3_response = await evnex_client.get_charge_point_detail_v3(
                         charge_point_id=charge_point.id
                     )
@@ -188,9 +187,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                             (charge_point.id, connector_brief.connectorId)
                         ] = connector_brief
 
-                    _LOGGER.debug(
-                        f"Getting evnex charge point sessions for '{charge_point.name}'"
-                    )
+                    _LOGGER.debug(f"Getting evnex charge point sessions for '{charge_point.name}'")
                     charge_point_sessions = (
                         await evnex_client.get_charge_point_sessions(
                             charge_point_id=charge_point.id
@@ -222,6 +219,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                         charge_point.id
                     ] = charge_point_sessions
 
+            # Keep old key for migration purposes - can remove in future versions
+            data["charge_points"] = data["charge_points_by_org"]
             return data
         except NotAuthorizedException:
             if not is_retry:
@@ -249,7 +248,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER,
         name=DOMAIN,
         update_method=async_update_data,
-        update_interval=timedelta(minutes=3),
+        update_interval=SCAN_INTERVAL,
     )
 
     hass.data[DOMAIN][entry.entry_id] = {
