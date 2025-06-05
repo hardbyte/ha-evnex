@@ -6,7 +6,7 @@ from homeassistant.const import Platform
 NAME = "evnex"
 DOMAIN = "evnex"
 DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "0.6.0a2"
+VERSION = "0.7.0"
 ATTRIBUTION = "Data provided by https://evnex.io"
 ISSUE_URL = "https://github.com/hardbyte/ha-evnex/issues"
 

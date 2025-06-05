@@ -20,6 +20,8 @@ from custom_components.evnex.const import DATA_UPDATED
 from custom_components.evnex.entity import EvnexChargePointConnectorEntity
 from evnex.api import Evnex
 from evnex.schema.charge_points import EvnexChargePointLoadSchedule
+from evnex.schema.v3.charge_points import EvnexChargePointDetail as EvnexChargePointDetailV3
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,27 +40,49 @@ async def async_setup_entry(
 ) -> None:
     """Set up the number sliders."""
     entities = []
-
     evnex_api_client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
+    if not coordinator.data or not coordinator.data.get("user"):
+            _LOGGER.warning("Number setup: Coordinator data or user data not available yet.")
+            return
+    user_detail = coordinator.data["user"]
+    all_org_charge_points_data = coordinator.data.get("charge_points_by_org", {})
 
-    brief = coordinator.data["charge_point_brief"]
-    for charger_id in brief:
-        connector_brief = coordinator.data["connector_brief"]
-        description = EvnexNumberDescription(
-            key="charger_maximum_current",
-            name="Charger Maximum Current",
-            icon="mdi:ev-station",
-            initial_value=connector_brief[(charger_id, "1")].maxAmperage,
-            native_min_value=0,
-            native_max_value=connector_brief[(charger_id, "1")].maxAmperage,
-            native_step=1,
-        )
-        entities.append(
-            EvnexNumber(evnex_api_client, coordinator, charger_id, description)
-        )
+    for org_brief in user_detail.organisations:
+        org_id = org_brief.id
+        charge_points_in_org = all_org_charge_points_data.get(org_id, [])
 
-    async_add_entities(entities)
+        for charge_point_obj in charge_points_in_org:
+            charger_id = charge_point_obj.id
+            charge_point_detail_v3: EvnexChargePointDetailV3 | None = coordinator.data.get("charge_point_details",
+                                                                                           {}).get(charger_id)
+
+            if charge_point_detail_v3 and charge_point_detail_v3.connectors:
+                for connector_v3_brief in charge_point_detail_v3.connectors:
+                    connector_id = connector_v3_brief.connectorId
+                    # connector_v3_brief is the EvnexChargePointConnector object
+
+                    if connector_v3_brief.maxAmperage is not None:
+                        description = EvnexNumberDescription(
+                            key=f"connector_{connector_id}_maximum_current",  # Unique key
+                            name=f"Connector {connector_id} Maximum Current",
+                            icon="mdi:speedometer",  # Changed icon
+                            initial_value=float(connector_v3_brief.maxAmperage),
+                            native_min_value=6.0,  # Common minimum for EVSEs
+                            native_max_value=float(connector_v3_brief.maxAmperage),
+                            native_step=1.0,
+                            # mode=NumberMode.SLIDER, # Optional: if you want a slider
+                        )
+                        entities.append(
+                            EvnexNumber(evnex_api_client, coordinator, charger_id, org_id, connector_id, description)
+                        )
+                    else:
+                        _LOGGER.debug(f"Max amperage not available for charger {charger_id} connector {connector_id}")
+            else:
+                _LOGGER.debug(f"No V3 connector details for charger {charger_id} in org {org_id} for number entities.")
+
+    if entities:
+        async_add_entities(entities)
 
 
 class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
@@ -66,14 +90,14 @@ class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
 
     entity_description: EvnexNumberDescription
 
-    def __init__(self, api_client, coordinator, charger_id, description):
+    def __init__(self, api_client, coordinator, charger_id, org_id,  connector_id: str, description):
         """Initialize a Number instance."""
         self.evnex: Evnex = api_client
         self.entity_description = description
         self._attr_native_value = self.entity_description.initial_value
         self._attr_should_poll = False
 
-        super().__init__(coordinator=coordinator, charger_id=charger_id)
+        super().__init__(coordinator=coordinator, charger_id=charger_id, org_id=org_id, connector_id=connector_id)
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -91,10 +115,9 @@ class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
-            not self.coordinator.data["charge_point_brief"][self.charger_id]
-            == "OFFLINE"
-        )  # type: ignore [no-any-return]
+        if not self.charge_point_brief or self.charge_point_brief.networkStatus == "OFFLINE":
+            return False
+        return super().available
 
     async def async_set_native_value(self, value):
         """Set new value."""
