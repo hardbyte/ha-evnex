@@ -160,9 +160,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
             for org in account.organisations:
                 _LOGGER.info(f"Getting evnex charge points for '{org.name}' (Org ID: {org.id}, Slug: {org.slug})")
-                charge_points: list[
-                    EvnexChargePoint
-                ] = await evnex_client.get_org_charge_points(org.id)
+                try:
+                    charge_points: list[
+                        EvnexChargePoint
+                    ] = await evnex_client.get_org_charge_points(org.id)
+                except HTTPStatusError:
+                    _LOGGER.info(f"Org ID not supported switching to Slug") 
+                    charge_points: list[
+                        EvnexChargePoint
+                    ] = await evnex_client.get_org_charge_points(org.slug)
                 data["charge_points_by_org"][org.id] = [cp for cp in charge_points]
                 data["org_briefs"][org.id] = org
                 _LOGGER.debug(f"Getting evnex org insights for {org.name}")
