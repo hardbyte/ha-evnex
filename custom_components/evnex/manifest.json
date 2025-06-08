@@ -13,7 +13,7 @@
     "evnex"
   ],
   "requirements": [
-    "evnex>=0.4.1"
+    "evnex>=0.4.4"
   ],
   "version": "0.7.0"
 }
