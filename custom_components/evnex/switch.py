@@ -39,7 +39,9 @@ class EvnexChargerOverrideSwitch(EvnexChargerEntity, SwitchEntity):
 
     @property
     def icon(self):
-        override = self.coordinator.data.get("charge_point_override", {}).get(self.charger_id)
+        override = self.coordinator.data.get("charge_point_override", {}).get(
+            self.charger_id
+        )
         if override is None:
             return "network-strength-off-outline"
 
@@ -48,7 +50,9 @@ class EvnexChargerOverrideSwitch(EvnexChargerEntity, SwitchEntity):
 
     @property
     def is_on(self):
-        override = self.coordinator.data.get("charge_point_override", {}).get(self.charger_id)
+        override = self.coordinator.data.get("charge_point_override", {}).get(
+            self.charger_id
+        )
         return override is not None and override.chargeNow
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -78,14 +82,18 @@ class EvnexChargerAvailabilitySwitch(EvnexChargePointConnectorEntity, SwitchEnti
         )
 
         super().__init__(
-            coordinator=coordinator, charger_id=charger_id, org_id=org_id, connector_id=connector_id
+            coordinator=coordinator,
+            charger_id=charger_id,
+            org_id=org_id,
+            connector_id=connector_id,
         )
-
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        charger_brief = self.coordinator.data.get("charge_point_brief", {}).get(self.charger_id)
+        charger_brief = self.coordinator.data.get("charge_point_brief", {}).get(
+            self.charger_id
+        )
         if not charger_brief or charger_brief.networkStatus == "OFFLINE":
             return False
         return super().available  # Rely on CoordinatorEntity.available
@@ -105,7 +113,8 @@ class EvnexChargerAvailabilitySwitch(EvnexChargePointConnectorEntity, SwitchEnti
 
         await self.evnex.enable_charger(
             org_id=self.org_id,
-            charge_point_id=self.charger_id, connector_id=self.connector_id
+            charge_point_id=self.charger_id,
+            connector_id=self.connector_id,
         )
         await self.coordinator.async_request_refresh()
 
@@ -114,7 +123,8 @@ class EvnexChargerAvailabilitySwitch(EvnexChargePointConnectorEntity, SwitchEnti
         _LOGGER.info("Disabling 'Availability' switch")
         await self.evnex.disable_charger(
             org_id=self.org_id,
-            charge_point_id=self.charger_id, connector_id=self.connector_id
+            charge_point_id=self.charger_id,
+            connector_id=self.connector_id,
         )
         await self.coordinator.async_request_refresh()
 
@@ -130,10 +140,14 @@ async def async_setup_entry(
     evnex_api_client = hass_data[DATA_CLIENT]
     coordinator = hass_data[DATA_COORDINATOR]
     if not coordinator.data or not coordinator.data.get("user"):
-        _LOGGER.warning("Switch setup: Coordinator data or user data not available yet.")
+        _LOGGER.warning(
+            "Switch setup: Coordinator data or user data not available yet."
+        )
         return
     user_detail: EvnexUserDetail = coordinator.data["user"]
-    all_org_charge_points_data: dict[str, list[EvnexChargePoint]] = coordinator.data.get("charge_points", {})
+    all_org_charge_points_data: dict[str, list[EvnexChargePoint]] = (
+        coordinator.data.get("charge_points", {})
+    )
 
     for org_brief in user_detail.organisations:
         org_id = org_brief.id
@@ -144,18 +158,27 @@ async def async_setup_entry(
             charger_id = charge_point_obj.id
 
             entities.append(
-                EvnexChargerOverrideSwitch(evnex_api_client, coordinator, charger_id, org_id)
+                EvnexChargerOverrideSwitch(
+                    evnex_api_client, coordinator, charger_id, org_id
+                )
             )
 
-            charge_point_detail_v3: EvnexChargePointDetailV3 | None = coordinator.data.get("charge_point_details", {}).get(charger_id)
-
+            charge_point_detail_v3: EvnexChargePointDetailV3 | None = (
+                coordinator.data.get("charge_point_details", {}).get(charger_id)
+            )
 
             # Iterate through connectors of this charger
             if charge_point_detail_v3 and charge_point_detail_v3.connectors:
                 for connector_detail_v3 in charge_point_detail_v3.connectors:
                     connector_id = connector_detail_v3.connectorId
                     entities.append(
-                        EvnexChargerAvailabilitySwitch(evnex_api_client, coordinator, charger_id, org_id, connector_id)
+                        EvnexChargerAvailabilitySwitch(
+                            evnex_api_client,
+                            coordinator,
+                            charger_id,
+                            org_id,
+                            connector_id,
+                        )
                     )
             else:
                 _LOGGER.debug(

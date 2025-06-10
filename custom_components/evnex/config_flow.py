@@ -1,4 +1,5 @@
 """Config flow for Evnex EV Charger integration."""
+
 from __future__ import annotations
 
 import logging
