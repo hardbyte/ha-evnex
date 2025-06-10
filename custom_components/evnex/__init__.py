@@ -246,7 +246,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             )
             raise
         except Exception as err:
-            _LOGGER.exception("Unhandled exception while updating evnex info")
+            _LOGGER.exception(f"Unhandled exception while updating evnex info {err=} {type(err)}")
             raise UpdateFailed from err
 
     coordinator = DataUpdateCoordinator(
