@@ -1,4 +1,5 @@
 """Number platform for ocpp."""
+
 from __future__ import annotations
 
 import logging
@@ -20,7 +21,9 @@ from custom_components.evnex.const import DATA_UPDATED
 from custom_components.evnex.entity import EvnexChargePointConnectorEntity
 from evnex.api import Evnex
 from evnex.schema.charge_points import EvnexChargePointLoadSchedule
-from evnex.schema.v3.charge_points import EvnexChargePointDetail as EvnexChargePointDetailV3
+from evnex.schema.v3.charge_points import (
+    EvnexChargePointDetail as EvnexChargePointDetailV3,
+)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,8 +46,10 @@ async def async_setup_entry(
     evnex_api_client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
     if not coordinator.data or not coordinator.data.get("user"):
-            _LOGGER.warning("Number setup: Coordinator data or user data not available yet.")
-            return
+        _LOGGER.warning(
+            "Number setup: Coordinator data or user data not available yet."
+        )
+        return
     user_detail = coordinator.data["user"]
     all_org_charge_points_data = coordinator.data.get("charge_points_by_org", {})
 
@@ -54,8 +59,9 @@ async def async_setup_entry(
 
         for charge_point_obj in charge_points_in_org:
             charger_id = charge_point_obj.id
-            charge_point_detail_v3: EvnexChargePointDetailV3 | None = coordinator.data.get("charge_point_details",
-                                                                                           {}).get(charger_id)
+            charge_point_detail_v3: EvnexChargePointDetailV3 | None = (
+                coordinator.data.get("charge_point_details", {}).get(charger_id)
+            )
 
             if charge_point_detail_v3 and charge_point_detail_v3.connectors:
                 for connector_v3_brief in charge_point_detail_v3.connectors:
@@ -74,12 +80,23 @@ async def async_setup_entry(
                             # mode=NumberMode.SLIDER, # Optional: if you want a slider
                         )
                         entities.append(
-                            EvnexNumber(evnex_api_client, coordinator, charger_id, org_id, connector_id, description)
+                            EvnexNumber(
+                                evnex_api_client,
+                                coordinator,
+                                charger_id,
+                                org_id,
+                                connector_id,
+                                description,
+                            )
                         )
                     else:
-                        _LOGGER.debug(f"Max amperage not available for charger {charger_id} connector {connector_id}")
+                        _LOGGER.debug(
+                            f"Max amperage not available for charger {charger_id} connector {connector_id}"
+                        )
             else:
-                _LOGGER.debug(f"No V3 connector details for charger {charger_id} in org {org_id} for number entities.")
+                _LOGGER.debug(
+                    f"No V3 connector details for charger {charger_id} in org {org_id} for number entities."
+                )
 
     if entities:
         async_add_entities(entities)
@@ -90,14 +107,27 @@ class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
 
     entity_description: EvnexNumberDescription
 
-    def __init__(self, api_client, coordinator, charger_id, org_id,  connector_id: str, description):
+    def __init__(
+        self,
+        api_client,
+        coordinator,
+        charger_id,
+        org_id,
+        connector_id: str,
+        description,
+    ):
         """Initialize a Number instance."""
         self.evnex: Evnex = api_client
         self.entity_description = description
         self._attr_native_value = self.entity_description.initial_value
         self._attr_should_poll = False
 
-        super().__init__(coordinator=coordinator, charger_id=charger_id, org_id=org_id, connector_id=connector_id)
+        super().__init__(
+            coordinator=coordinator,
+            charger_id=charger_id,
+            org_id=org_id,
+            connector_id=connector_id,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -115,7 +145,10 @@ class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        if not self.charge_point_brief or self.charge_point_brief.networkStatus == "OFFLINE":
+        if (
+            not self.charge_point_brief
+            or self.charge_point_brief.networkStatus == "OFFLINE"
+        ):
             return False
         return super().available
 

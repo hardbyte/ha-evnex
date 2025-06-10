@@ -2,6 +2,7 @@
 Custom integration to integrate ChargePoint with Home Assistant.
 
 """
+
 import os
 import json
 import logging
@@ -92,7 +93,7 @@ async def async_setup(hass: HomeAssistant, entry: ConfigEntry):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Load the saved entities."""
     _LOGGER.info(
-        "Version %s is starting, if you have any issues please report" " them here: %s",
+        "Version %s is starting, if you have any issues please report them here: %s",
         VERSION,
         ISSUE_URL,
     )
@@ -101,7 +102,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     password = entry.data[CONF_PASSWORD]
 
     # Load tokens from storage
-    evnex_auth_tokens = await hass.async_add_executor_job(retrieve_evnex_auth_tokens, hass, entry)
+    evnex_auth_tokens = await hass.async_add_executor_job(
+        retrieve_evnex_auth_tokens, hass, entry
+    )
     evnex_auth_tokens = {} if evnex_auth_tokens is None else evnex_auth_tokens
 
     httpx_client = get_async_client(hass)
@@ -140,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             "charge_point_override": {},  # by cp_id
             "charge_point_sessions": {},  # by cp_id
             "connector_brief": {},  # by (cp_id, connectorId)
-            "charge_point_to_org_map": {}, # by cp_id -> org_id
+            "charge_point_to_org_map": {},  # by cp_id -> org_id
         }
 
         try:
@@ -159,13 +162,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             data["user"] = account
 
             for org in account.organisations:
-                _LOGGER.info(f"Getting evnex charge points for '{org.name}' (Org ID: {org.id}, Slug: {org.slug})")
+                _LOGGER.info(
+                    f"Getting evnex charge points for '{org.name}' (Org ID: {org.id}, Slug: {org.slug})"
+                )
                 try:
                     charge_points: list[
                         EvnexChargePoint
                     ] = await evnex_client.get_org_charge_points(org.id)
                 except HTTPStatusError:
-                    _LOGGER.info(f"Org ID not supported switching to Slug") 
+                    _LOGGER.info("Org ID not supported switching to Slug")
                     charge_points: list[
                         EvnexChargePoint
                     ] = await evnex_client.get_org_charge_points(org.slug)
@@ -178,9 +183,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 data["org_insights"][org.id] = daily_insights
 
                 for charge_point in charge_points:
-                    data["charge_point_to_org_map"][charge_point.id] = org.id # Map charge_point.id back to org.id
+                    data["charge_point_to_org_map"][charge_point.id] = (
+                        org.id
+                    )  # Map charge_point.id back to org.id
 
-                    _LOGGER.debug(f"Getting evnex charge point data for '{charge_point.name}'")
+                    _LOGGER.debug(
+                        f"Getting evnex charge point data for '{charge_point.name}'"
+                    )
                     api_v3_response = await evnex_client.get_charge_point_detail_v3(
                         charge_point_id=charge_point.id
                     )
@@ -193,7 +202,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                             (charge_point.id, connector_brief.connectorId)
                         ] = connector_brief
 
-                    _LOGGER.debug(f"Getting evnex charge point sessions for '{charge_point.name}'")
+                    _LOGGER.debug(
+                        f"Getting evnex charge point sessions for '{charge_point.name}'"
+                    )
                     charge_point_sessions = (
                         await evnex_client.get_charge_point_sessions(
                             charge_point_id=charge_point.id
@@ -218,12 +229,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
                     data["charge_point_brief"][charge_point.id] = charge_point
                     data["charge_point_details"][charge_point.id] = charge_point_detail
-                    data["charge_point_override"][
-                        charge_point.id
-                    ] = charge_point_override
-                    data["charge_point_sessions"][
-                        charge_point.id
-                    ] = charge_point_sessions
+                    data["charge_point_override"][charge_point.id] = (
+                        charge_point_override
+                    )
+                    data["charge_point_sessions"][charge_point.id] = (
+                        charge_point_sessions
+                    )
 
             # Keep old key for migration purposes - can remove in future versions
             data["charge_points"] = data["charge_points_by_org"]
@@ -246,7 +257,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             )
             raise
         except Exception as err:
-            _LOGGER.exception(f"Unhandled exception while updating evnex info {err=} {type(err)}")
+            _LOGGER.exception(
+                f"Unhandled exception while updating evnex info {err=} {type(err)}"
+            )
             raise UpdateFailed from err
 
     coordinator = DataUpdateCoordinator(
