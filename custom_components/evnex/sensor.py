@@ -287,6 +287,7 @@ class EvnexChargePortConnectorStatusSensor(
 
     @property
     def native_value(self):
+        self.connector_brief = self.coordinator.data.get("connector_brief").get((self.charger_id, self.connector_id))
         if self.connector_brief:
             return self.connector_brief.ocppStatus
         return None
@@ -329,6 +330,7 @@ class EvnexChargePortConnectorVoltageSensor(
 
     @property
     def native_value(self):
+        self.connector_brief = self.coordinator.data.get("connector_brief").get((self.charger_id, self.connector_id))
         if self.connector_brief and self.connector_brief.meter:
             return self.connector_brief.meter.voltageL1N
         return None
@@ -348,6 +350,7 @@ class EvnexChargePortConnectorCurrentSensor(
 
     @property
     def native_value(self):
+        self.connector_brief = self.coordinator.data.get("connector_brief").get((self.charger_id, self.connector_id))
         if self.connector_brief and self.connector_brief.meter:
             return self.connector_brief.meter.currentL1
         return None
@@ -367,6 +370,7 @@ class EvnexChargePortConnectorPowerSensor(
 
     @property
     def native_value(self):
+        self.connector_brief = self.coordinator.data.get("connector_brief").get((self.charger_id, self.connector_id))
         if self.connector_brief and self.connector_brief.meter and self.connector_brief.meter.power is not None:
             return self.connector_brief.meter.power / 1000
         return None
@@ -386,6 +390,7 @@ class EvnexChargePortConnectorFrequencySensor(
 
     @property
     def native_value(self):
+        self.connector_brief = self.coordinator.data.get("connector_brief").get((self.charger_id, self.connector_id))
         if self.connector_brief and self.connector_brief.meter:
             return self.connector_brief.meter.frequency
         return None
