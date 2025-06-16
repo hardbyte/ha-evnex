@@ -227,7 +227,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                             _LOGGER.warning(
                                 "Read timeout prevented getting charge point override"
                             )
-                        finally:
                             charge_point_override = None
                     else:
                         _LOGGER.debug(
