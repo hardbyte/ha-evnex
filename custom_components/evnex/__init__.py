@@ -25,7 +25,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
-from httpx import HTTPStatusError
+from httpx import HTTPStatusError, ReadTimeout
 
 from .const import (
     DATA_CLIENT,
@@ -216,11 +216,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                         _LOGGER.debug(
                             f"Getting evnex charge point override for '{charge_point.name}'"
                         )
-                        charge_point_override: EvnexChargePointOverrideConfig = (
-                            await evnex_client.get_charge_point_override(
-                                charge_point_id=charge_point.id
+                        # Don't block data update if a read timeout encountered
+                        try:
+                            charge_point_override: EvnexChargePointOverrideConfig = (
+                                await evnex_client.get_charge_point_override(
+                                    charge_point_id=charge_point.id
+                                )
                             )
-                        )
+                        except ReadTimeout:
+                            _LOGGER.warning(
+                                "Read timeout prevented getting charge point override"
+                            )
+                            charge_point_override = None
                     else:
                         _LOGGER.debug(
                             "Not getting charge point override as charge point is not ONLINE"
