@@ -74,7 +74,7 @@ async def async_setup_entry(
                             name=f"Connector {connector_id} Maximum Current",
                             icon="mdi:speedometer",  # Changed icon
                             initial_value=float(connector_v3_brief.maxAmperage),
-                            native_min_value=6.0,  # Common minimum for EVSEs
+                            native_min_value=0.0,  # Common minimum for EVSEs
                             native_max_value=float(connector_v3_brief.maxAmperage),
                             native_step=1.0,
                             # mode=NumberMode.SLIDER, # Optional: if you want a slider
