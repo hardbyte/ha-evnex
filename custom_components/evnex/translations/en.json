@@ -27,5 +27,10 @@
     "error": {
       "invalid_credentials": "Invalid credentials"
     }
+  },
+  "entity": {
+    "button": {
+      "charger_stop_session": "Stop charging session"
+    }
   }
 }
