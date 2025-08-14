@@ -16,9 +16,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from custom_components.evnex import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
-from custom_components.evnex.const import DATA_UPDATED
-from custom_components.evnex.entity import EvnexChargePointConnectorEntity
+from .const import DATA_UPDATED, DATA_CLIENT, DATA_COORDINATOR, DOMAIN
+from .entity import EvnexChargePointConnectorEntity
 from evnex.api import Evnex
 from evnex.schema.charge_points import EvnexChargePointLoadSchedule
 from evnex.schema.v3.charge_points import (
@@ -115,7 +114,7 @@ class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
         org_id,
         connector_id: str,
         description,
-    ):
+    ) -> None:
         """Initialize a Number instance."""
         self.evnex: Evnex = api_client
         self.entity_description = description
@@ -139,7 +138,7 @@ class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
         )
 
     @callback
-    def _schedule_immediate_update(self):
+    def _schedule_immediate_update(self) -> None:
         self.async_schedule_update_ha_state(True)
 
     @property
@@ -152,7 +151,7 @@ class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
             return False
         return super().available
 
-    async def async_set_native_value(self, value):
+    async def async_set_native_value(self, value) -> None:
         """Set new value."""
         num_value = float(value)
         _LOGGER.info(f"Setting current to {num_value}A")
@@ -169,6 +168,6 @@ class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
             self._attr_native_value = num_value
             self.async_write_ha_state()
         else:
-            _LOGGER.warn(f"Failed request: {resp}")
+            _LOGGER.warning(f"Failed request: {resp}")
 
         await self.coordinator.async_request_refresh()
