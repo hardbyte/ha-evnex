@@ -23,7 +23,9 @@ class EvnexOrgEntity(CoordinatorEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: DataUpdateCoordinator, org_id: str = None):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, org_id: str | None = None
+    ) -> None:
         """Initialize an Evnex Org"""
         super().__init__(coordinator)
         if org_id is None:
@@ -66,7 +68,7 @@ class EvnexChargerEntity(CoordinatorEntity):
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, charger_id: str, org_id: str
-    ):
+    ) -> None:
         """Initialize the ChargePoint entity."""
         super().__init__(coordinator)
         self.org_id = org_id
@@ -158,7 +160,7 @@ class EvnexChargePointConnectorEntity(EvnexChargerEntity):
         charger_id: str,
         org_id: str,
         connector_id: str = "1",
-    ):
+    ) -> None:
         """Initialize the Charge Point Connector entity."""
         self.connector_id = connector_id
         super().__init__(coordinator, charger_id=charger_id, org_id=org_id)

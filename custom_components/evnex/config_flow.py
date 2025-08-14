@@ -84,7 +84,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
-            errors["base"] = "invalid_auth"
+            errors["base"] = "invalid_credentials"
         except Exception:  # pylint: disable=broad-except
             logger.exception("Unexpected exception")
             errors["base"] = "unknown"

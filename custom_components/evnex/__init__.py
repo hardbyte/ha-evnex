@@ -85,12 +85,12 @@ def retrieve_evnex_auth_tokens(
                 return None
 
 
-async def async_setup(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Disallow configuration via YAML"""
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load the saved entities."""
     _LOGGER.info(
         "Version %s is starting, if you have any issues please report them here: %s",
