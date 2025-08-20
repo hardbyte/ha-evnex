@@ -30,7 +30,9 @@
   },
   "entity": {
     "button": {
-      "charger_stop_session": "Stop charging session"
+      "charger_stop_session": {
+        "name": "Stop charging session"
+      }
     }
   }
 }
