@@ -1,0 +1,27 @@
+repos:
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    # uv version.
+    rev: 0.8.12
+    hooks:
+      - id: uv-lock
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.10
+    hooks:
+      - id: ruff
+        args:
+          - --fix
+      - id: ruff-format
+        files: ^((custom_components|tests)/.+)?[^/]+\.(py|pyi)$
+  - repo: https://github.com/JelleZijlstra/autotyping
+    rev: master
+    hooks:
+      - id: autotyping
+        stages: [ pre-commit ]
+        types: [ python ]
+        args: [ --safe ]
+        files: ^((custom_components)/.+)?[^/]+\.(py|pyi)$
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: ''  # Use the sha / tag you want to point at
+    hooks:
+      - id: mypy
+        files: ^((custom_components)/.+)?[^/]+\.(py|pyi)$

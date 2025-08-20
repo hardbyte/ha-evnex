@@ -7,8 +7,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
-from custom_components.evnex import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
-from custom_components.evnex.entity import (
+from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
+from .entity import (
     EvnexChargePointConnectorEntity,
     EvnexChargerEntity,
 )
@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EvnexChargerOverrideSwitch(EvnexChargerEntity, SwitchEntity):
-    def __init__(self, api_client, coordinator, charger_id, org_id):
+    def __init__(self, api_client, coordinator, charger_id, org_id) -> None:
         """Initialise the switch."""
         self.evnex = api_client
 
@@ -73,7 +73,9 @@ class EvnexChargerOverrideSwitch(EvnexChargerEntity, SwitchEntity):
 
 
 class EvnexChargerAvailabilitySwitch(EvnexChargePointConnectorEntity, SwitchEntity):
-    def __init__(self, api_client, coordinator, charger_id, org_id, connector_id="1"):
+    def __init__(
+        self, api_client, coordinator, charger_id, org_id, connector_id="1"
+    ) -> None:
         """Initialise the switch."""
         self.evnex: Evnex = api_client
         self.entity_description = SwitchEntityDescription(
@@ -99,7 +101,7 @@ class EvnexChargerAvailabilitySwitch(EvnexChargePointConnectorEntity, SwitchEnti
         return super().available  # Rely on CoordinatorEntity.available
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         return "mdi:ev-station"
 
     @property
