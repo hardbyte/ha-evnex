@@ -14,7 +14,6 @@ ISSUE_URL = "https://github.com/hardbyte/ha-evnex/issues"
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.NUMBER, Platform.BUTTON]
 
 # Configuration and options
-CONF_ENABLED = "enabled"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
 
@@ -28,3 +27,5 @@ DATA_COORDINATOR = "coordinator"
 
 # Signals
 DATA_UPDATED = "evnex_data_updated"
+
+CHARGER_SESSION_READY_STATES = ["SUSPENDED_EVSE", "CHARGING"]

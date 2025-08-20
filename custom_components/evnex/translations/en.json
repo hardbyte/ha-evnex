@@ -1,38 +1,37 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "title": "Evnex Credentials",
-        "description": "Please enter your evnex login credentials.",
-        "data": {
-          "username": "Username",
-          "password": "Password"
-
+    "config": {
+        "error": {
+            "invalid_credentials": "Invalid credentials"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Please enter your evnex login credentials.",
+                "title": "Evnex Credentials"
+            }
         }
-      }
     },
-    "error": {
-      "invalid_credentials": "Invalid credentials"
-    }
-  },
-  "options": {
-    "step": {
-      "user": {
-        "data": {
-          "username": "Username",
-          "password": "Password"
+    "entity": {
+        "button": {
+            "charger_stop_session": {
+                "name": "Stop charging session"
+            }
         }
-      }
     },
-    "error": {
-      "invalid_credentials": "Invalid credentials"
+    "options": {
+        "error": {
+            "invalid_credentials": "Invalid credentials"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            }
+        }
     }
-  },
-  "entity": {
-    "button": {
-      "charger_stop_session": {
-        "name": "Stop charging session"
-      }
-    }
-  }
 }

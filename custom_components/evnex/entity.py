@@ -67,7 +67,11 @@ class EvnexChargerEntity(CoordinatorEntity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, charger_id: str, org_id: str
+        self,
+        coordinator: DataUpdateCoordinator,
+        charger_id: str,
+        org_id: str,
+        key: str | None = None,
     ) -> None:
         """Initialize the ChargePoint entity."""
         super().__init__(coordinator)
@@ -111,7 +115,8 @@ class EvnexChargerEntity(CoordinatorEntity):
         self.charger_id = charger_id
         self.manufacturer = "evnex"
         self.short_charger_model = self.charge_point_brief.details.model
-        self._attr_unique_id = self.charger_id + self.entity_description.key
+        unique_key = self.entity_description.key if key is None else key
+        self._attr_unique_id = self.charger_id + unique_key
 
     @property
     def device_info(self) -> DeviceInfo:
