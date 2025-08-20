@@ -84,6 +84,8 @@ def retrieve_evnex_auth_tokens(
                 _LOGGER.error("Failed to decode JSON session data in %s", file)
                 return None
 
+    return None
+
 
 async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Disallow configuration via YAML"""
@@ -133,7 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update_data(is_retry: bool = False):
         """Fetch data from EVNEX API"""
 
-        data = {
+        data: dict = {
             "user": None,
             "org_briefs": {},  # by org_id
             "org_insights": {},  # by org_id
@@ -165,15 +167,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 _LOGGER.info(
                     f"Getting evnex charge points for '{org.name}' (Org ID: {org.id}, Slug: {org.slug})"
                 )
+                charge_points: list[EvnexChargePoint] = list()
                 try:
-                    charge_points: list[
-                        EvnexChargePoint
-                    ] = await evnex_client.get_org_charge_points(org.id)
+                    charge_points = await evnex_client.get_org_charge_points(org.id)
                 except HTTPStatusError:
                     _LOGGER.info("Org ID not supported switching to Slug")
-                    charge_points: list[
-                        EvnexChargePoint
-                    ] = await evnex_client.get_org_charge_points(org.slug)
+                    charge_points = await evnex_client.get_org_charge_points(org.slug)
                 data["charge_points_by_org"][org.id] = [cp for cp in charge_points]
                 data["org_briefs"][org.id] = org
                 _LOGGER.debug(f"Getting evnex org insights for {org.name}")

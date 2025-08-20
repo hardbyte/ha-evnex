@@ -80,7 +80,6 @@ async def async_setup_entry(
             # Iterate through connectors of this charger
             if charge_point_detail_v3 and charge_point_detail_v3.connectors:
                 for connector_detail_v3 in charge_point_detail_v3.connectors:
-                    connector_id = connector_detail_v3.connectorId
                     entities.append(
                         EvnexChargerButtonEntity(
                             evnex_api_client,
