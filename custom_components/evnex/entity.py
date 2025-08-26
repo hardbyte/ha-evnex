@@ -142,7 +142,7 @@ class EvnexChargerEntity(CoordinatorEntity):
             manufacturer=NAME,
             model=model,
             sw_version=firmware,
-            hw_version=serial,
+            serial_number=serial,
         )
 
     @property
