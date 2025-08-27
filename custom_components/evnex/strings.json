@@ -1,0 +1,105 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Evnex Credentials",
+        "description": "Please enter your evnex login credentials.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+
+        }
+      }
+    },
+    "error": {
+      "invalid_credentials": "Invalid credentials"
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_credentials": "Invalid credentials"
+    }
+  },
+  "entity": {
+    "button": {
+      "charger_stop_session": {
+        "name": "Stop charging session"
+      }
+    },
+    "switch": {
+      "charger_charge_now": {
+        "name": "Charge now"
+      },
+      "connector_1_availability": {
+        "name": "Connector 1 availability"
+      },
+      "connector_2_availability": {
+        "name": "Connector 2 availability"
+      }
+    },
+    "sensor": {
+      "org_wide_power_usage_today": {
+        "name": "Total power usage today"
+      },
+      "org_wide_charger_sessions_today": {
+        "name": "Charger sessions today"
+      },
+      "org_tier": {
+        "name": "Organisation tier"
+      },
+      "charger_network_status": {
+        "name": "Charger network status"
+      },
+      "session_energy": {
+        "name": "Session energy added"
+      },
+      "session_cost": {
+        "name": "Charge cost"
+      },
+       "session_time": {
+         "name": "Charge time"
+       },
+      "session_start_time": {
+        "name": "Last session start"
+      },
+      "charger_session_history": {
+        "name": "Session history"
+      },
+      "connector_status": {
+        "name": "Connector status"
+      },
+      "connector_current_l1": {
+        "name": "Current L1"
+      },
+      "connector_current_l2": {
+        "name": "Current L2"
+      },
+      "connector_current_l3": {
+        "name": "Current L3"
+      },
+      "connector_frequency": {
+        "name": "Metered frequency"
+      },
+      "connector_power": {
+        "name": "Metered power"
+      },
+      "connector_voltage_l1": {
+          "name": "Voltage L1"
+      },
+      "connector_voltage_l2": {
+          "name": "Voltage L2"
+      },
+      "connector_voltage_l3": {
+          "name": "Voltage L3"
+      }
+    }
+  }
+}

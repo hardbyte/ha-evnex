@@ -48,7 +48,8 @@ class EvnexOrgEntity(CoordinatorEntity):
 
         self.device_name = self.org_brief.name
         self.device_id = self.org_brief.id
-        self._attr_unique_id = self.org_id + self.entity_description.key
+        self._attr_unique_id = f"{self.org_id}_{self.entity_description.key}"
+        self._attr_translation_key = self.entity_description.key
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -115,8 +116,8 @@ class EvnexChargerEntity(CoordinatorEntity):
         self.charger_id = charger_id
         self.manufacturer = "evnex"
         self.short_charger_model = self.charge_point_brief.details.model
-        unique_key = self.entity_description.key if key is None else key
-        self._attr_unique_id = self.charger_id + unique_key
+        self._attr_unique_id = f"{self.charger_id}_{key}"
+        self._attr_translation_key = key
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -165,13 +166,12 @@ class EvnexChargePointConnectorEntity(EvnexChargerEntity):
         charger_id: str,
         org_id: str,
         connector_id: str = "1",
+        key: str | None = None,
     ) -> None:
         """Initialize the Charge Point Connector entity."""
+        super().__init__(coordinator, charger_id=charger_id, org_id=org_id, key=key)
         self.connector_id = connector_id
-        super().__init__(coordinator, charger_id=charger_id, org_id=org_id)
-        self._attr_unique_id = (
-            f"{self.charger_id}_{self.connector_id}_{self.entity_description.key}"
-        )
+
         self.connector_brief: EvnexChargePointConnector | None = (
             self.connector_brief_by_id.get(self.connector_id)
         )

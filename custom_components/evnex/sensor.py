@@ -22,6 +22,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -35,11 +36,10 @@ MAX_SESSIONS_IN_ATTRIBUTES = 10  # Configurable: Number of recent sessions to st
 
 
 class EvnexOrgWidePowerUsageSensorToday(EvnexOrgEntity, SensorEntity):
+    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="org_wide_power_usage_today",
-        name="Total Power Usage Today",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        icon="mdi:lightning-bolt-circle",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
     )
@@ -61,11 +61,10 @@ class EvnexOrgWidePowerUsageSensorToday(EvnexOrgEntity, SensorEntity):
 
 
 class EvnexOrgWideChargeSessionsCountSensor(EvnexOrgEntity, SensorEntity):
+    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="org_wide_charger_sessions_today",
-        name="Charger sessions today",
         native_unit_of_measurement="sessions",
-        icon="mdi:repeat_one",
         state_class=SensorStateClass.TOTAL,
     )
 
@@ -83,10 +82,9 @@ class EvnexOrgWideChargeSessionsCountSensor(EvnexOrgEntity, SensorEntity):
 
 
 class EvnexOrgTierSensor(EvnexOrgEntity, SensorEntity):
+    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="org_tier",
-        name="Organisation tier",
-        icon="mdi:warehouse",
     )
 
     @property
@@ -98,10 +96,9 @@ class EvnexOrgTierSensor(EvnexOrgEntity, SensorEntity):
 
 
 class EvnexChargerNetworkStatusSensor(EvnexChargerEntity, SensorEntity):
+    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="charger_network_status",
-        name="Network Status",
-        icon="mdi:wifi",
     )
 
     @property
@@ -112,10 +109,9 @@ class EvnexChargerNetworkStatusSensor(EvnexChargerEntity, SensorEntity):
 
 
 class EvnexChargerSessionEnergy(EvnexChargerEntity, SensorEntity):
+    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="session_energy",
-        name="Session Energy Added",
-        icon="mdi:lightning-bolt-circle",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -138,11 +134,9 @@ class EvnexChargerSessionEnergy(EvnexChargerEntity, SensorEntity):
 
 
 class EvnexChargerSessionCost(EvnexChargerEntity, SensorEntity):
+    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="session_cost",
-        name="Charge Cost",
-        icon="mdi:cash-multiple",
-        # native_unit_of_measurement=CURRENCY_DOLLAR,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
     )
@@ -166,10 +160,9 @@ class EvnexChargerSessionCost(EvnexChargerEntity, SensorEntity):
 
 
 class EvnexChargerSessionTime(EvnexChargerEntity, SensorEntity):
+    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="session_time",
-        name="Charge Time",
-        icon="mdi:timer",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         device_class=SensorDeviceClass.DURATION,
     )
@@ -199,11 +192,10 @@ class EvnexChargerSessionTime(EvnexChargerEntity, SensorEntity):
 
 
 class EvnexChargerLastSessionStartTime(EvnexChargerEntity, SensorEntity):
+    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="session_start_time",
-        name="Last Session Start",
         device_class=SensorDeviceClass.TIMESTAMP,
-        icon="mdi:progress-clock",
     )
 
     @property
@@ -221,10 +213,10 @@ class EvnexChargerLastSessionStartTime(EvnexChargerEntity, SensorEntity):
 class EvnexChargerSessionHistorySensor(EvnexChargerEntity, SensorEntity):
     """Sensor to expose recent charging session history."""
 
+    _attr_has_entity_name = True
+
     entity_description = SensorEntityDescription(
         key="charger_session_history",
-        name="Session History",  # Will be prefixed with device name by HA
-        icon="mdi:history",
     )
 
     @property
@@ -299,9 +291,9 @@ class EvnexChargerSessionHistorySensor(EvnexChargerEntity, SensorEntity):
 class EvnexChargePortConnectorStatusSensor(
     EvnexChargePointConnectorEntity, SensorEntity
 ):
+    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="connector_status",
-        name="Connector Status",
     )
 
     @property
@@ -344,12 +336,12 @@ class EvnexChargePortConnectorStatusSensor(
 class EvnexChargePortConnectorVoltageSensor(
     EvnexChargePointConnectorEntity, SensorEntity
 ):
+    _attr_has_entity_name = True
+
     entity_description = SensorEntityDescription(
-        key="connector_voltage",
-        name="VoltageL1N",
+        key="connector_voltage_l1",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        icon="mdi:lightning-bolt",
         state_class=SensorStateClass.MEASUREMENT,
     )
 
@@ -367,13 +359,28 @@ class EvnexChargePortConnectorCurrentSensor(
     EvnexChargePointConnectorEntity, SensorEntity
 ):
     entity_description = SensorEntityDescription(
-        key="connector_current",
-        name="CurrentL1",
+        key="connector_current_l1",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        icon="mdi:lightning-bolt",
         state_class=SensorStateClass.MEASUREMENT,
     )
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        charger_id: str,
+        org_id: str,
+        connector_id: str = "1",
+        line: str = "l1",
+    ) -> None:
+        """Initialize the current sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            charger_id=charger_id,
+            org_id=org_id,
+            connector_id=connector_id,
+            key=f"connector_current_{line}",
+        )
 
     @property
     def native_value(self):
@@ -390,10 +397,8 @@ class EvnexChargePortConnectorPowerSensor(
 ):
     entity_description = SensorEntityDescription(
         key="connector_power",
-        name="Metered Power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        icon="mdi:flash-triangle",
         state_class=SensorStateClass.MEASUREMENT,
     )
 
@@ -416,10 +421,8 @@ class EvnexChargePortConnectorFrequencySensor(
 ):
     entity_description = SensorEntityDescription(
         key="connector_frequency",
-        name="Metered Frequency",
         device_class=SensorDeviceClass.FREQUENCY,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
-        icon="mdi:sine-wave",
         state_class=SensorStateClass.MEASUREMENT,
     )
 

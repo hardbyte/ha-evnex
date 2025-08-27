@@ -121,6 +121,7 @@ class EvnexChargerButtonEntity(EvnexChargerEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.entity_description.press_fn(self.evnex, self.charger_id, self.org_id)
+        await self.coordinator.async_refresh()
 
     @property
     def available(self) -> bool:
