@@ -274,6 +274,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=DOMAIN,
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
+        config_entry=entry,
     )
 
     hass.data[DOMAIN][entry.entry_id] = {
