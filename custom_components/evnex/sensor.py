@@ -72,7 +72,6 @@ class EvnexOrgWidePowerUsageSensorToday(EvnexOrgEntity, SensorEntity):
 
 
 class EvnexOrgWideChargeSessionsCountSensor(EvnexOrgEntity, SensorEntity):
-    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="org_wide_charger_sessions_today",
         native_unit_of_measurement="sessions",
@@ -104,7 +103,6 @@ class EvnexOrgWideChargeSessionsCountSensor(EvnexOrgEntity, SensorEntity):
 
 
 class EvnexOrgTierSensor(EvnexOrgEntity, SensorEntity):
-    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="org_tier",
     )
@@ -129,7 +127,6 @@ class EvnexOrgTierSensor(EvnexOrgEntity, SensorEntity):
 
 
 class EvnexChargerNetworkStatusSensor(EvnexChargerEntity, SensorEntity):
-    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="charger_network_status",
     )
@@ -156,7 +153,6 @@ class EvnexChargerNetworkStatusSensor(EvnexChargerEntity, SensorEntity):
 
 
 class EvnexChargerSessionEnergy(EvnexChargerEntity, SensorEntity):
-    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="session_energy",
         device_class=SensorDeviceClass.ENERGY,
@@ -195,7 +191,6 @@ class EvnexChargerSessionEnergy(EvnexChargerEntity, SensorEntity):
 
 
 class EvnexChargerSessionCost(EvnexChargerEntity, SensorEntity):
-    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="session_cost",
         state_class=SensorStateClass.TOTAL,
@@ -235,7 +230,6 @@ class EvnexChargerSessionCost(EvnexChargerEntity, SensorEntity):
 
 
 class EvnexChargerSessionTime(EvnexChargerEntity, SensorEntity):
-    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="session_time",
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -281,7 +275,6 @@ class EvnexChargerSessionTime(EvnexChargerEntity, SensorEntity):
 
 
 class EvnexChargerLastSessionStartTime(EvnexChargerEntity, SensorEntity):
-    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="session_start_time",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -306,8 +299,6 @@ class EvnexChargerLastSessionStartTime(EvnexChargerEntity, SensorEntity):
 
 class EvnexChargerSessionHistorySensor(EvnexChargerEntity, SensorEntity):
     """Sensor to expose recent charging session history."""
-
-    _attr_has_entity_name = True
 
     entity_description = SensorEntityDescription(
         key="charger_session_history",
@@ -390,7 +381,6 @@ class EvnexChargerSessionHistorySensor(EvnexChargerEntity, SensorEntity):
 class EvnexChargePortConnectorStatusSensor(
     EvnexChargePointConnectorEntity, SensorEntity
 ):
-    _attr_has_entity_name = True
     entity_description = SensorEntityDescription(
         key="connector_status",
     )
@@ -445,8 +435,6 @@ class EvnexChargePortConnectorStatusSensor(
 class EvnexChargePortConnectorVoltageSensor(
     EvnexChargePointConnectorEntity, SensorEntity
 ):
-    _attr_has_entity_name = True
-
     entity_description = SensorEntityDescription(
         key="connector_voltage_l1",
         device_class=SensorDeviceClass.VOLTAGE,
@@ -479,8 +467,6 @@ class EvnexChargePortConnectorVoltageSensor(
 class EvnexChargePortConnectorCurrentSensor(
     EvnexChargePointConnectorEntity, SensorEntity
 ):
-    _attr_has_entity_name = True
-
     entity_description = SensorEntityDescription(
         key="connector_current_l1",
         device_class=SensorDeviceClass.CURRENT,
@@ -518,8 +504,6 @@ class EvnexChargePortConnectorCurrentSensor(
 class EvnexChargePortConnectorPowerSensor(
     EvnexChargePointConnectorEntity, SensorEntity
 ):
-    _attr_has_entity_name = True
-
     entity_description = SensorEntityDescription(
         key="connector_power",
         device_class=SensorDeviceClass.POWER,
@@ -560,8 +544,6 @@ class EvnexChargePortConnectorPowerSensor(
 class EvnexChargePortConnectorFrequencySensor(
     EvnexChargePointConnectorEntity, SensorEntity
 ):
-    _attr_has_entity_name = True
-
     entity_description = SensorEntityDescription(
         key="connector_frequency",
         device_class=SensorDeviceClass.FREQUENCY,
