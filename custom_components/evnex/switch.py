@@ -51,7 +51,6 @@ EVNEX_SWITCHES: tuple[EvnexSwitchEntityDescription, ...] = (
 
 
 class EvnexChargerSwitch(EvnexChargerEntity, SwitchEntity):
-    _attr_has_entity_name = True
     entity_description: EvnexSwitchEntityDescription
 
     def __init__(
@@ -91,8 +90,6 @@ class EvnexChargerSwitch(EvnexChargerEntity, SwitchEntity):
 
 
 class EvnexChargerAvailabilitySwitch(EvnexChargePointConnectorEntity, SwitchEntity):
-    _attr_has_entity_name = True
-
     def __init__(
         self, api_client, coordinator, charger_id, org_id, connector_id="1"
     ) -> None:

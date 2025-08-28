@@ -28,7 +28,7 @@ from evnex.schema.v3.charge_points import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class EvnexNumberDescription(NumberEntityDescription):
     """Class to describe a Number entity."""
 

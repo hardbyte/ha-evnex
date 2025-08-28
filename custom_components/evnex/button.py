@@ -95,7 +95,6 @@ async def async_setup_entry(
 
 class EvnexChargerButtonEntity(EvnexChargerEntity, ButtonEntity):
     entity_description: EvnexButtonSensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
