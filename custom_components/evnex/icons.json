@@ -2,21 +2,18 @@
   "entity": {
     "switch": {
       "connector_1_availability_switch": {
-        "default": "mdi:ev-station",
+        "default": "mdi:ev-station"
       },
       "charger_charge_now": {
         "default": "mdi:close-network",
         "state": {
-          "on": "mdi:check-network",
+          "on": "mdi:check-network"
         }
       }
     },
     "button": {
       "charger_stop_session": {
-        "default": "mdi:electric-switch-closed",
-        "state": {
-          "disabled": "mdi:electric-switch"
-        }
+        "default": "mdi:electric-switch-closed"
       }
     },
     "sensor": {

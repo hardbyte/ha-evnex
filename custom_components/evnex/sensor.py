@@ -44,6 +44,17 @@ class EvnexOrgWidePowerUsageSensorToday(EvnexOrgEntity, SensorEntity):
         state_class=SensorStateClass.TOTAL,
     )
 
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        org_id: str,
+    ) -> None:
+        """Initialize the current sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            org_id=org_id,
+        )
+
     @property
     def native_value(self):
         """Return the state of the sensor."""
@@ -68,6 +79,17 @@ class EvnexOrgWideChargeSessionsCountSensor(EvnexOrgEntity, SensorEntity):
         state_class=SensorStateClass.TOTAL,
     )
 
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        org_id: str,
+    ) -> None:
+        """Initialize the current sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            org_id=org_id,
+        )
+
     @property
     def native_value(self):
         """Return the state of the sensor."""
@@ -87,6 +109,17 @@ class EvnexOrgTierSensor(EvnexOrgEntity, SensorEntity):
         key="org_tier",
     )
 
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        org_id: str,
+    ) -> None:
+        """Initialize the current sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            org_id=org_id,
+        )
+
     @property
     def native_value(self):
         """Return the state of the sensor."""
@@ -100,6 +133,20 @@ class EvnexChargerNetworkStatusSensor(EvnexChargerEntity, SensorEntity):
     entity_description = SensorEntityDescription(
         key="charger_network_status",
     )
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        charger_id: str,
+        org_id: str,
+    ) -> None:
+        """Initialize the current sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            charger_id=charger_id,
+            org_id=org_id,
+            key=self.entity_description.key,
+        )
 
     @property
     def native_value(self):
@@ -115,8 +162,22 @@ class EvnexChargerSessionEnergy(EvnexChargerEntity, SensorEntity):
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     )
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        charger_id: str,
+        org_id: str,
+    ) -> None:
+        """Initialize the current sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            charger_id=charger_id,
+            org_id=org_id,
+            key=self.entity_description.key,
+        )
 
     @property
     def native_value(self):
@@ -140,6 +201,20 @@ class EvnexChargerSessionCost(EvnexChargerEntity, SensorEntity):
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
     )
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        charger_id: str,
+        org_id: str,
+    ) -> None:
+        """Initialize the current sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            charger_id=charger_id,
+            org_id=org_id,
+            key=self.entity_description.key,
+        )
 
     @property
     def native_value(self):
@@ -166,6 +241,20 @@ class EvnexChargerSessionTime(EvnexChargerEntity, SensorEntity):
         native_unit_of_measurement=UnitOfTime.SECONDS,
         device_class=SensorDeviceClass.DURATION,
     )
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        charger_id: str,
+        org_id: str,
+    ) -> None:
+        """Initialize the current sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            charger_id=charger_id,
+            org_id=org_id,
+            key=self.entity_description.key,
+        )
 
     @property
     def native_value(self):
@@ -198,6 +287,11 @@ class EvnexChargerLastSessionStartTime(EvnexChargerEntity, SensorEntity):
         device_class=SensorDeviceClass.TIMESTAMP,
     )
 
+    def __init__(self, coordinator, charger_id, org_id_for_charger) -> None:
+        super().__init__(
+            coordinator, charger_id, org_id_for_charger, key=self.entity_description.key
+        )
+
     @property
     def native_value(self):
         sessions = self.coordinator.data.get("charge_point_sessions", {}).get(
@@ -218,6 +312,11 @@ class EvnexChargerSessionHistorySensor(EvnexChargerEntity, SensorEntity):
     entity_description = SensorEntityDescription(
         key="charger_session_history",
     )
+
+    def __init__(self, coordinator, charger_id, org_id_for_charger) -> None:
+        super().__init__(
+            coordinator, charger_id, org_id_for_charger, key=self.entity_description.key
+        )
 
     @property
     def native_value(self):
@@ -296,6 +395,16 @@ class EvnexChargePortConnectorStatusSensor(
         key="connector_status",
     )
 
+    def __init__(self, coordinator, charger_id, org_id, connector_id) -> None:
+        super().__init__(
+            coordinator,
+            charger_id,
+            org_id,
+            connector_id,
+            key=self.entity_description.key,
+        )
+        self._attr_translation_key = self.entity_description.key
+
     @property
     def native_value(self):
         self.connector_brief = self.coordinator.data.get("connector_brief").get(
@@ -345,6 +454,18 @@ class EvnexChargePortConnectorVoltageSensor(
         state_class=SensorStateClass.MEASUREMENT,
     )
 
+    def __init__(
+        self, coordinator, charger_id, org_id, connector_id, line: str = "l1"
+    ) -> None:
+        super().__init__(
+            coordinator,
+            charger_id,
+            org_id,
+            connector_id,
+            key=f"connector_voltage_{line}",
+        )
+        self._attr_translation_key = f"connector_voltage_{line}"
+
     @property
     def native_value(self):
         self.connector_brief = self.coordinator.data.get("connector_brief").get(
@@ -358,6 +479,8 @@ class EvnexChargePortConnectorVoltageSensor(
 class EvnexChargePortConnectorCurrentSensor(
     EvnexChargePointConnectorEntity, SensorEntity
 ):
+    _attr_has_entity_name = True
+
     entity_description = SensorEntityDescription(
         key="connector_current_l1",
         device_class=SensorDeviceClass.CURRENT,
@@ -395,12 +518,30 @@ class EvnexChargePortConnectorCurrentSensor(
 class EvnexChargePortConnectorPowerSensor(
     EvnexChargePointConnectorEntity, SensorEntity
 ):
+    _attr_has_entity_name = True
+
     entity_description = SensorEntityDescription(
         key="connector_power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     )
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        charger_id: str,
+        org_id: str,
+        connector_id: str = "1",
+    ) -> None:
+        """Initialize the current sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            charger_id=charger_id,
+            org_id=org_id,
+            connector_id=connector_id,
+            key=self.entity_description.key,
+        )
 
     @property
     def native_value(self):
@@ -419,12 +560,30 @@ class EvnexChargePortConnectorPowerSensor(
 class EvnexChargePortConnectorFrequencySensor(
     EvnexChargePointConnectorEntity, SensorEntity
 ):
+    _attr_has_entity_name = True
+
     entity_description = SensorEntityDescription(
         key="connector_frequency",
         device_class=SensorDeviceClass.FREQUENCY,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
     )
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        charger_id: str,
+        org_id: str,
+        connector_id: str = "1",
+    ) -> None:
+        """Initialize the current sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            charger_id=charger_id,
+            org_id=org_id,
+            connector_id=connector_id,
+            key=self.entity_description.key,
+        )
 
     @property
     def native_value(self):

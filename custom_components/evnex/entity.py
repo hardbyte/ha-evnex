@@ -160,6 +160,8 @@ class EvnexChargerEntity(CoordinatorEntity):
 class EvnexChargePointConnectorEntity(EvnexChargerEntity):
     """Base Entity for a specific evnex charger's connector"""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -170,6 +172,7 @@ class EvnexChargePointConnectorEntity(EvnexChargerEntity):
     ) -> None:
         """Initialize the Charge Point Connector entity."""
         super().__init__(coordinator, charger_id=charger_id, org_id=org_id, key=key)
+        self._attr_translation_key = key
         self.connector_id = connector_id
 
         self.connector_brief: EvnexChargePointConnector | None = (

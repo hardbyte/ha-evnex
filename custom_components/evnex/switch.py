@@ -37,10 +37,9 @@ class EvnexSwitchEntityDescription(SwitchEntityDescription):
 EVNEX_SWITCHES: tuple[EvnexSwitchEntityDescription, ...] = (
     EvnexSwitchEntityDescription(
         key="charger_charge_now",
-        is_on_func=lambda data, charger_id: (
-            data.get("charge_point_override", {}).get(charger_id).override is not None
-            and data.get("charge_point_override", {}).get(charger_id).override.chargeNow
-        ),
+        is_on_func=lambda data, charger_id: data.get("charge_point_override", {})
+        .get(charger_id)
+        .chargeNow,
         on_func=lambda evnex_api, charge_point_id: evnex_api.set_charge_point_override(
             charge_point_id=charge_point_id, charge_now=True
         ),
@@ -76,7 +75,9 @@ class EvnexChargerSwitch(EvnexChargerEntity, SwitchEntity):
 
     @property
     def is_on(self):
-        return self.entity_description.on_func(self.coordinator.data, self.charger_id)
+        return self.entity_description.is_on_func(
+            self.coordinator.data, self.charger_id
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Charge now."""
