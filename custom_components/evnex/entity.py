@@ -116,7 +116,7 @@ class EvnexChargerEntity(CoordinatorEntity):
         self.charger_id = charger_id
         self.manufacturer = "evnex"
         self.short_charger_model = self.charge_point_brief.details.model
-        self._attr_unique_id = f"{self.charger_id}_{key}"
+        self._attr_unique_id = f"{self.charger_id}{key}"
         self._attr_translation_key = key
 
     @property
