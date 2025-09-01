@@ -8,7 +8,7 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "homeassistant >= 2025.1.0",
-    "evnex >= 0.4.6",
+    "evnex >= 0.4.7",
 ]
 
 [dependency-groups]

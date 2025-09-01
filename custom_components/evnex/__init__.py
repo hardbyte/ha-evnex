@@ -1,5 +1,5 @@
 """
-Custom integration to integrate ChargePoint with Home Assistant.
+Custom integration to integrate Evnex with Home Assistant.
 
 """
 
