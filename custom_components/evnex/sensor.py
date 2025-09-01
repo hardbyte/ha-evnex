@@ -453,6 +453,7 @@ class EvnexChargePortConnectorVoltageSensor(
             key=f"connector_voltage_{line}",
         )
         self._attr_translation_key = f"connector_voltage_{line}"
+        self.line = line
 
     @property
     def native_value(self):
@@ -460,7 +461,7 @@ class EvnexChargePortConnectorVoltageSensor(
             (self.charger_id, self.connector_id)
         )
         if self.connector_brief and self.connector_brief.meter:
-            return self.connector_brief.meter.voltageL1N
+            return self.connector_brief.meter[f"voltage{str.capitalize(self.line)}N"]
         return None
 
 
@@ -490,6 +491,7 @@ class EvnexChargePortConnectorCurrentSensor(
             connector_id=connector_id,
             key=f"connector_current_{line}",
         )
+        self.line = line
 
     @property
     def native_value(self):
@@ -497,7 +499,7 @@ class EvnexChargePortConnectorCurrentSensor(
             (self.charger_id, self.connector_id)
         )
         if self.connector_brief and self.connector_brief.meter:
-            return self.connector_brief.meter.currentL1
+            return self.connector_brief.meter[f"current{str.capitalize(self.line)}"]
         return None
 
 
@@ -661,11 +663,54 @@ async def async_setup_entry(
                         coordinator, charger_id, org_id_for_charger, connector_id
                     )
                 )
+                if hasattr(connector_detail_v3.meter, "voltageL2N"):
+                    entities.append(
+                        EvnexChargePortConnectorVoltageSensor(
+                            coordinator,
+                            charger_id,
+                            org_id_for_charger,
+                            connector_id,
+                            "L2",
+                        )
+                    )
+                if hasattr(connector_detail_v3.meter, "voltageL3N"):
+                    entities.append(
+                        EvnexChargePortConnectorVoltageSensor(
+                            coordinator,
+                            charger_id,
+                            org_id_for_charger,
+                            connector_id,
+                            "L3",
+                        )
+                    )
+
                 entities.append(
                     EvnexChargePortConnectorCurrentSensor(
                         coordinator, charger_id, org_id_for_charger, connector_id
                     )
                 )
+                if hasattr(connector_detail_v3.meter, "currentL2"):
+                    entities.append(
+                        EvnexChargePortConnectorCurrentSensor(
+                            coordinator,
+                            charger_id,
+                            org_id_for_charger,
+                            connector_id,
+                            "L2",
+                        )
+                    )
+
+                if hasattr(connector_detail_v3.meter, "currentL3"):
+                    entities.append(
+                        EvnexChargePortConnectorCurrentSensor(
+                            coordinator,
+                            charger_id,
+                            org_id_for_charger,
+                            connector_id,
+                            "L3",
+                        )
+                    )
+
                 entities.append(
                     EvnexChargePortConnectorPowerSensor(
                         coordinator, charger_id, org_id_for_charger, connector_id
