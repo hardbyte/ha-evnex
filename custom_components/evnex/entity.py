@@ -7,6 +7,8 @@ from evnex.schema.v3.charge_points import (
     EvnexChargePointDetail,
 )
 from evnex.schema.org import EvnexOrgBrief
+
+from evnex.models import parse_model
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -136,14 +138,19 @@ class EvnexChargerEntity(CoordinatorEntity):
             self.charge_point_brief.serial if self.charge_point_brief else "Unknown"
         )
 
+        model_info = parse_model(model)
+
         return DeviceInfo(
-            configuration_url="https://evnex.io",
+            configuration_url="https://app.evnex.io",
             identifiers={(DOMAIN, self.charger_id)},
             name=self.device_name,
             manufacturer=NAME,
-            model=model,
+            model=f"{model_info.name} - {model_info.colour}",
+            model_id=model,
             sw_version=firmware,
+            hw_version=None,
             serial_number=serial,
+            suggested_area="Garage",
         )
 
     @property
