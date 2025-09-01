@@ -17,8 +17,9 @@ from evnex.schema.user import EvnexUserDetail
 from evnex.errors import NotAuthorizedException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, Platform
+from homeassistant.helpers import entity_registry as er
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import (

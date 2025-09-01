@@ -25,6 +25,10 @@ def _is_charger_session_ready(
     connector_brief = coordinator.data.get("connector_brief").get(
         (charger_id, connector_id)
     )
+
+    if coordinator.data["charge_point_details"][charger_id].networkStatus != "ONLINE":
+        return False
+
     if connector_brief is not None:
         return connector_brief.ocppStatus in CHARGER_SESSION_READY_STATES
     return False

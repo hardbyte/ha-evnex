@@ -74,6 +74,12 @@ class EvnexChargerSwitch(EvnexChargerEntity, SwitchEntity):
 
     @property
     def is_on(self):
+        """Return true if switch is on."""
+        if (
+            self.coordinator.data["charge_point_details"][self.charger_id].networkStatus
+            == "OFFLINE"
+        ):
+            return False
         return self.entity_description.is_on_func(
             self.coordinator.data, self.charger_id
         )
@@ -87,6 +93,13 @@ class EvnexChargerSwitch(EvnexChargerEntity, SwitchEntity):
         """Don't charge now."""
         await self.entity_description.off_func(self.evnex, self.charger_id)
         await self.coordinator.async_request_refresh()
+
+    @property
+    def available(self) -> bool:
+        return (
+            self.coordinator.data["charge_point_details"][self.charger_id].networkStatus
+            == "ONLINE"
+        )
 
 
 class EvnexChargerAvailabilitySwitch(EvnexChargePointConnectorEntity, SwitchEntity):

@@ -180,6 +180,7 @@ class EvnexChargePointConnectorEntity(EvnexChargerEntity):
         """Initialize the Charge Point Connector entity."""
         super().__init__(coordinator, charger_id=charger_id, org_id=org_id, key=key)
         self._attr_translation_key = key
+        self._attr_unique_id = f"{self.charger_id}_{connector_id}_{key}"
         self.connector_id = connector_id
 
         self.connector_brief: EvnexChargePointConnector | None = (
