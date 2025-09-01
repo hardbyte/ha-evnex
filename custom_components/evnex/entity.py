@@ -50,7 +50,7 @@ class EvnexOrgEntity(CoordinatorEntity):
 
         self.device_name = self.org_brief.name
         self.device_id = self.org_brief.id
-        self._attr_unique_id = f"{self.org_id}_{self.entity_description.key}"
+        self._attr_unique_id = f"{self.org_id}{self.entity_description.key}"
         self._attr_translation_key = self.entity_description.key
 
     @property
