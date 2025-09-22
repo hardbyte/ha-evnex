@@ -16,6 +16,8 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from evnex.api import Evnex
 from evnex.errors import NotAuthorizedException
 
+from .const import DOMAIN
+
 logger = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -61,7 +63,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     }
 
 
-class ConfigFlow(config_entries.ConfigFlow):
+class EvnexConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore
     """Handle a config flow for Evnex EV Charger."""
 
     VERSION = 1
