@@ -1,6 +1,6 @@
 [project]
 name = "evnex-ha"
-version = "0.7.6"
+version = "0.7.7"
 description = "Home Assistant integration for EVNEX EV chargers"
 authors = [
     {name = "Brian Thorne", email = "brian@hardbyte.nz"},
@@ -8,7 +8,7 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "homeassistant >= 2025.1.0",
-    "evnex >= 0.4.7",
+    "evnex >= 0.4.8",
 ]
 
 [dependency-groups]
