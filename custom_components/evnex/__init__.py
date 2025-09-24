@@ -364,6 +364,8 @@ async def _async_migrate_entries(
             }
         return None
 
-    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+    if config_entry.version == 1 and config_entry.minor_version < 2:
+        await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+        config_entry.minor_version = 2
 
     return True
