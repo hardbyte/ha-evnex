@@ -21,7 +21,7 @@
         "default": "mdi:lightning-bolt-circle"
       },
       "org_wide_charger_sessions_today": {
-        "default": "mdi:repeat_once"
+        "default": "mdi:repeat-once"
       },
       "org_tier": {
         "default": "mdi:warehouse"
