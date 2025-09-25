@@ -148,7 +148,7 @@ class EvnexChargerNetworkStatusSensor(EvnexChargerEntity, SensorEntity):
     @property
     def native_value(self):
         if self.charge_point_brief:
-            return self.charge_point_brief.networkStatus
+            return str.lower(self.charge_point_brief.networkStatus)
         return None
 
 
@@ -400,7 +400,7 @@ class EvnexChargePortConnectorStatusSensor(
             (self.charger_id, self.connector_id)
         )
         if self.connector_brief:
-            return self.connector_brief.ocppStatus
+            return str.lower(self.connector_brief.ocppStatus)
         return None
 
     @property
