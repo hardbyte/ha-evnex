@@ -56,7 +56,11 @@
         "name": "Organisation tier"
       },
       "charger_network_status": {
-        "name": "Charger network status"
+        "name": "Charger network status",
+        "state": {
+          "online": "Online",
+          "offline": "Offline"
+        }
       },
       "session_energy": {
         "name": "Session energy added"
@@ -74,7 +78,19 @@
         "name": "Session history"
       },
       "connector_status": {
-        "name": "Connector status"
+        "name": "Connector status",
+          "state": {
+            "offline": "Offline",
+            "available": "Available",
+            "preparing": "Preparing to charge",
+            "charging": "Charging",
+            "suspended_evse": "Charging has been paused by the charge point",
+            "suspended_ev": "The vehicle is not currently requesting energy",
+            "finishing": "Finished charging - unplug charge point",
+            "reserved": "Reserved",
+            "unavailable": "Disabled",
+            "faulted": "Faulted"
+          }
       },
       "connector_current_l1": {
         "name": "Current L1"
