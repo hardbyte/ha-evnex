@@ -1,0 +1,73 @@
+{
+  "entity": {
+    "switch": {
+      "connector_1_availability_switch": {
+        "default": "mdi:ev-station"
+      },
+      "charger_charge_now": {
+        "default": "mdi:close-network",
+        "state": {
+          "on": "mdi:check-network"
+        }
+      }
+    },
+    "button": {
+      "charger_stop_session": {
+        "default": "mdi:electric-switch-closed"
+      }
+    },
+    "sensor": {
+      "org_wide_power_usage_today": {
+        "default": "mdi:lightning-bolt-circle"
+      },
+      "org_wide_charger_sessions_today": {
+        "default": "mdi:repeat-once"
+      },
+      "org_tier": {
+        "default": "mdi:warehouse"
+      },
+      "charger_network_status": {
+        "default": "mdi:wifi"
+      },
+      "session_energy": {
+        "default": "mdi:lightning-bolt-circle"
+      },
+      "session_cost": {
+        "default": "mdi:cash-multiple"
+      },
+      "session_time": {
+        "default": "mdi:timer"
+      },
+      "session_start_time": {
+        "default": "mdi:progress-clock"
+      },
+      "charger_session_history": {
+        "default": "mdi:history"
+      },
+      "connector_frequency": {
+        "default": "mdi:sine-wave"
+      },
+      "connector_current_l1": {
+        "default": "mdi:lightning-bolt"
+      },
+      "connector_current_l2": {
+        "default": "mdi:lightning-bolt"
+      },
+      "connector_current_l3": {
+        "default": "mdi:lightning-bolt"
+      },
+      "connector_voltage_l1": {
+        "default": "mdi:lightning-bolt"
+      },
+      "connector_voltage_l2": {
+        "default": "mdi:lightning-bolt"
+      },
+      "connector_voltage_l3": {
+        "default": "mdi:lightning-bolt"
+      },
+      "connector_power": {
+        "default": "mdi:flash-triangle"
+      }
+    }
+  }
+}

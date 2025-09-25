@@ -19,6 +19,81 @@
             "charger_stop_session": {
                 "name": "Stop charging session"
             }
+        },
+        "number": {
+          "connector_1_maximum_current": {
+            "name": "Connector 1 maximum current"
+          },
+          "connector_2_maximum_current": {
+            "name": "Connector 2 maximum current"
+          }
+        },
+        "sensor": {
+            "charger_network_status": {
+                "name": "Charger network status"
+            },
+            "charger_session_history": {
+                "name": "Session history"
+            },
+            "connector_current_l1": {
+                "name": "Current L1"
+            },
+            "connector_current_l2": {
+                "name": "Current L2"
+            },
+            "connector_current_l3": {
+                "name": "Current L3"
+            },
+            "connector_frequency": {
+                "name": "Metered frequency"
+            },
+            "connector_power": {
+                "name": "Metered power"
+            },
+            "connector_status": {
+                "name": "Connector status"
+            },
+            "connector_voltage_l1": {
+                "name": "Voltage L1"
+            },
+            "connector_voltage_l2": {
+                "name": "Voltage L2"
+            },
+            "connector_voltage_l3": {
+                "name": "Voltage L3"
+            },
+            "org_tier": {
+                "name": "Organisation tier"
+            },
+            "org_wide_charger_sessions_today": {
+                "name": "Charger sessions today"
+            },
+            "org_wide_power_usage_today": {
+                "name": "Total power usage today"
+            },
+            "session_cost": {
+                "name": "Charge cost"
+            },
+            "session_energy": {
+                "name": "Session energy added"
+            },
+            "session_start_time": {
+                "name": "Last session start"
+            },
+            "session_time": {
+                "name": "Charge time"
+            }
+        },
+        "switch": {
+            "charger_charge_now": {
+                "name": "Charge now"
+            },
+            "connector_1_availability": {
+                "name": "Connector 1 availability"
+            },
+            "connector_2_availability": {
+                "name": "Connector 2 availability"
+            }
         }
     },
     "options": {

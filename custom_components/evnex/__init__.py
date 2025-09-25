@@ -1,5 +1,5 @@
 """
-Custom integration to integrate ChargePoint with Home Assistant.
+Custom integration to integrate Evnex with Home Assistant.
 
 """
 
@@ -17,8 +17,9 @@ from evnex.schema.user import EvnexUserDetail
 from evnex.errors import NotAuthorizedException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, Platform
+from homeassistant.helpers import entity_registry as er
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import (
@@ -131,6 +132,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed from exc
 
     hass.data.setdefault(DOMAIN, {})
+
+    await _async_migrate_entries(hass, entry)
 
     async def async_update_data(is_retry: bool = False):
         """Fetch data from EVNEX API"""
@@ -274,6 +277,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=DOMAIN,
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
+        config_entry=entry,
     )
 
     hass.data[DOMAIN][entry.entry_id] = {
@@ -302,3 +306,66 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def _async_migrate_entries(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    entity_registry = er.async_get(hass)
+
+    @callback
+    def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
+        replacements = {
+            Platform.SENSOR.value: {
+                "org_wide_power_usage_today": "_org_wide_power_usage_today",
+                "org_wide_charger_sessions_today": "_org_wide_charger_sessions_today",
+                "org_tier": "_org_tier",
+                "charger_network_status": "_charger_network_status",
+                "session_energy": "_session_energy",
+                "session_cost": "_session_cost",
+                "session_time": "_session_time",
+                "session_start_time": "_session_start_time",
+                "charger_session_history": "_charger_session_history",
+                "_1_connector_current": "_1_connector_current_l1",
+                "_1_connector_voltage": "_1_connector_voltage_l1",
+            },
+            Platform.SWITCH.value: {
+                "charger_charge_now_switch": "_charger_charge_now",
+                "_1_connector_1_availability_switch": "_1_connector_1_availability",
+            },
+            Platform.BUTTON.value: {
+                "charger_stop_session": "_charger_stop_session",
+            },
+        }
+        uuid_part = entry.unique_id[:36]  # UUID is always 36 chars with dashes
+        remainder = entry.unique_id[36:]
+        if (key := remainder) in replacements.get(entry.domain, []):
+            new_unique_id = entry.unique_id.replace(
+                f"{uuid_part}{key}", f"{uuid_part}{replacements[entry.domain][key]}"
+            )
+            _LOGGER.debug(
+                "Migrating entity '%s' unique_id from '%s' to '%s'",
+                entry.entity_id,
+                entry.unique_id,
+                new_unique_id,
+            )
+            if existing_entity_id := entity_registry.async_get_entity_id(
+                entry.domain, entry.platform, new_unique_id
+            ):
+                _LOGGER.debug(
+                    "Cannot migrate to unique_id '%s', already exists for '%s'",
+                    new_unique_id,
+                    existing_entity_id,
+                )
+                return None
+            return {
+                "new_unique_id": new_unique_id,
+            }
+        return None
+
+    if config_entry.version == 1 and config_entry.minor_version == 1:
+        await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+        hass.config_entries.async_update_entry(config_entry, minor_version=2)
+
+    return True

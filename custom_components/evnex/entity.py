@@ -7,6 +7,8 @@ from evnex.schema.v3.charge_points import (
     EvnexChargePointDetail,
 )
 from evnex.schema.org import EvnexOrgBrief
+
+from evnex.models import parse_model
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -48,7 +50,8 @@ class EvnexOrgEntity(CoordinatorEntity):
 
         self.device_name = self.org_brief.name
         self.device_id = self.org_brief.id
-        self._attr_unique_id = self.org_id + self.entity_description.key
+        self._attr_unique_id = f"{self.org_id}_{self.entity_description.key}"
+        self._attr_translation_key = self.entity_description.key
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -115,8 +118,8 @@ class EvnexChargerEntity(CoordinatorEntity):
         self.charger_id = charger_id
         self.manufacturer = "evnex"
         self.short_charger_model = self.charge_point_brief.details.model
-        unique_key = self.entity_description.key if key is None else key
-        self._attr_unique_id = self.charger_id + unique_key
+        self._attr_unique_id = f"{self.charger_id}_{key}"
+        self._attr_translation_key = key
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -135,14 +138,19 @@ class EvnexChargerEntity(CoordinatorEntity):
             self.charge_point_brief.serial if self.charge_point_brief else "Unknown"
         )
 
+        model_info = parse_model(model)
+
         return DeviceInfo(
-            configuration_url="https://evnex.io",
+            configuration_url="https://app.evnex.io",
             identifiers={(DOMAIN, self.charger_id)},
             name=self.device_name,
             manufacturer=NAME,
-            model=model,
+            model=f"{model_info.name} - {model_info.colour}",
+            model_id=model,
             sw_version=firmware,
-            hw_version=serial,
+            hw_version=None,
+            serial_number=serial,
+            suggested_area="Garage",
         )
 
     @property
@@ -159,19 +167,22 @@ class EvnexChargerEntity(CoordinatorEntity):
 class EvnexChargePointConnectorEntity(EvnexChargerEntity):
     """Base Entity for a specific evnex charger's connector"""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
         charger_id: str,
         org_id: str,
         connector_id: str = "1",
+        key: str | None = None,
     ) -> None:
         """Initialize the Charge Point Connector entity."""
+        super().__init__(coordinator, charger_id=charger_id, org_id=org_id, key=key)
+        self._attr_translation_key = key
+        self._attr_unique_id = f"{self.charger_id}_{connector_id}_{key}"
         self.connector_id = connector_id
-        super().__init__(coordinator, charger_id=charger_id, org_id=org_id)
-        self._attr_unique_id = (
-            f"{self.charger_id}_{self.connector_id}_{self.entity_description.key}"
-        )
+
         self.connector_brief: EvnexChargePointConnector | None = (
             self.connector_brief_by_id.get(self.connector_id)
         )

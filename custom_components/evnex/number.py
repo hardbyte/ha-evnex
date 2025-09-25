@@ -28,7 +28,7 @@ from evnex.schema.v3.charge_points import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class EvnexNumberDescription(NumberEntityDescription):
     """Class to describe a Number entity."""
 
@@ -41,6 +41,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the number sliders."""
+
     entities = []
     evnex_api_client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
@@ -70,7 +71,6 @@ async def async_setup_entry(
                     if connector_v3_brief.maxAmperage is not None:
                         description = EvnexNumberDescription(
                             key=f"connector_{connector_id}_maximum_current",  # Unique key
-                            name=f"Connector {connector_id} Maximum Current",
                             icon="mdi:speedometer",  # Changed icon
                             initial_value=float(connector_v3_brief.maxAmperage),
                             native_min_value=0.0,  # Common minimum for EVSEs
@@ -126,6 +126,7 @@ class EvnexNumber(EvnexChargePointConnectorEntity, RestoreNumber, NumberEntity):
             charger_id=charger_id,
             org_id=org_id,
             connector_id=connector_id,
+            key=description.key,
         )
 
     async def async_added_to_hass(self) -> None:

@@ -25,6 +25,10 @@ def _is_charger_session_ready(
     connector_brief = coordinator.data.get("connector_brief").get(
         (charger_id, connector_id)
     )
+
+    if coordinator.data["charge_point_details"][charger_id].networkStatus != "ONLINE":
+        return False
+
     if connector_brief is not None:
         return connector_brief.ocppStatus in CHARGER_SESSION_READY_STATES
     return False
@@ -95,7 +99,6 @@ async def async_setup_entry(
 
 class EvnexChargerButtonEntity(EvnexChargerEntity, ButtonEntity):
     entity_description: EvnexButtonSensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -121,6 +124,7 @@ class EvnexChargerButtonEntity(EvnexChargerEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.entity_description.press_fn(self.evnex, self.charger_id, self.org_id)
+        await self.coordinator.async_refresh()
 
     @property
     def available(self) -> bool:
