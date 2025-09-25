@@ -32,8 +32,8 @@
             "charger_network_status": {
                 "name": "Charger network status",
                 "state": {
-                  "ONLINE": "Online",
-                  "OFFLINE": "Offline"
+                  "online": "Online",
+                  "offline": "Offline"
                 }
             },
             "charger_session_history": {
@@ -57,16 +57,16 @@
             "connector_status": {
                 "name": "Connector status",
                 "state": {
-                    "OFFLINE": "Offline",
-                    "AVAILABLE": "Available",
-                    "PREPARING": "Preparing to charge",
-                    "CHARGING": "Charging",
-                    "SUSPENDED_EVSE": "Charging has been paused by the charge point",
-                    "SUSPENDED_EV": "The vehicle is not currently requesting energy",
-                    "FINISHING": "Finished charging - unplug charge point",
-                    "RESERVED": "Reserved",
-                    "UNAVAILABLE": "Disabled",
-                    "FAULTED": "Faulted"
+                    "offline": "Offline",
+                    "available": "Available",
+                    "preparing": "Preparing to charge",
+                    "charging": "Charging",
+                    "suspended_evse": "Charging has been paused by the charge point",
+                    "suspended_ev": "The vehicle is not currently requesting energy",
+                    "finishing": "Finished charging - unplug charge point",
+                    "reserved": "Reserved",
+                    "unavailable": "Disabled",
+                    "faulted": "Faulted"
                 }
             },
             "connector_voltage_l1": {
