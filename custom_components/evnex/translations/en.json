@@ -35,6 +35,9 @@
             "charger_session_history": {
                 "name": "Session history"
             },
+            "connector_temperature": {
+              "name": "Connector temperature"
+            },
             "connector_current_l1": {
                 "name": "Current L1"
             },

@@ -5,7 +5,7 @@ import logging
 
 from evnex.schema.v3.charge_points import EvnexChargePointSession
 
-from homeassistant.const import UnitOfElectricCurrent
+from homeassistant.const import UnitOfElectricCurrent, UnitOfTemperature
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -581,6 +581,46 @@ class EvnexChargePortConnectorFrequencySensor(
         return None
 
 
+class EvnexChargePortConnectorTemperatureSensor(
+    EvnexChargePointConnectorEntity, SensorEntity
+):
+    entity_description = SensorEntityDescription(
+        key="connector_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    )
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        charger_id: str,
+        org_id: str,
+        connector_id: str = "1",
+    ) -> None:
+        """Initialize the current sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            charger_id=charger_id,
+            org_id=org_id,
+            connector_id=connector_id,
+            key=self.entity_description.key,
+        )
+
+    @property
+    def native_value(self):
+        self.connector_brief = self.coordinator.data.get("connector_brief").get(
+            (self.charger_id, self.connector_id)
+        )
+        if (
+            self.connector_brief
+            and self.connector_brief.meter
+            and self.connector_brief.meter.temperature is not None
+        ):
+            return self.connector_brief.meter.temperature
+        return None
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -691,7 +731,7 @@ async def async_setup_entry(
                         coordinator, charger_id, org_id_for_charger, connector_id
                     )
                 )
-                if connector_detail_v3.meter.currentL2:
+                if connector_detail_v3.meter.currentL2 is not None:
                     entities.append(
                         EvnexChargePortConnectorCurrentSensor(
                             coordinator,
@@ -702,7 +742,7 @@ async def async_setup_entry(
                         )
                     )
 
-                if connector_detail_v3.meter.currentL3:
+                if connector_detail_v3.meter.currentL3 is not None:
                     entities.append(
                         EvnexChargePortConnectorCurrentSensor(
                             coordinator,
@@ -710,6 +750,13 @@ async def async_setup_entry(
                             org_id_for_charger,
                             connector_id,
                             "l3",
+                        )
+                    )
+
+                if connector_detail_v3.meter.temperature is not None:
+                    entities.append(
+                        EvnexChargePortConnectorTemperatureSensor(
+                            coordinator, charger_id, org_id_for_charger, connector_id
                         )
                     )
 

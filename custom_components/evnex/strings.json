@@ -76,6 +76,9 @@
       "connector_status": {
         "name": "Connector status"
       },
+      "connector_temperature": {
+        "name": "Connector temperature"
+      },
       "connector_current_l1": {
         "name": "Current L1"
       },
