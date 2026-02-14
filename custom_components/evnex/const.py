@@ -19,6 +19,11 @@ CONF_PASSWORD = "password"
 
 TOKEN_FILE_NAME = "evnex_session.json"
 
+# Token keys stored in config entry data
+CONF_ID_TOKEN = "id_token"
+CONF_REFRESH_TOKEN = "refresh_token"
+CONF_ACCESS_TOKEN = "access_token"
+
 # Internal
 DATA_CLIENT = "evnex-client"
 DATA_COORDINATOR = "coordinator"

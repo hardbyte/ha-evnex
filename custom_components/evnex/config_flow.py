@@ -16,7 +16,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from evnex.api import Evnex
 from evnex.errors import NotAuthorizedException
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_ID_TOKEN, CONF_REFRESH_TOKEN, CONF_ACCESS_TOKEN
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +60,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         "title": user_data.name,
         "user_id": user_data.id,
         "default_org_id": evnex_client.org_id,
+        CONF_ID_TOKEN: evnex_client.id_token,
+        CONF_REFRESH_TOKEN: evnex_client.refresh_token,
+        CONF_ACCESS_TOKEN: evnex_client.access_token,
     }
 
 
@@ -67,7 +70,7 @@ class EvnexConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore
     """Handle a config flow for Evnex EV Charger."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -97,6 +100,9 @@ class EvnexConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
                     "user_id": info["user_id"],
                     "default_org_id": info["default_org_id"],
+                    CONF_ID_TOKEN: info[CONF_ID_TOKEN],
+                    CONF_REFRESH_TOKEN: info[CONF_REFRESH_TOKEN],
+                    CONF_ACCESS_TOKEN: info[CONF_ACCESS_TOKEN],
                 },
             )
 
