@@ -67,7 +67,7 @@ def persist_evnex_auth_tokens(
         "access_token": access_token,
     }
 
-    with open(os.open(file, os.O_CREAT | os.O_WRONLY, 0o600), "w") as spf:
+    with open(os.open(file, os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0o600), "w") as spf:
         json.dump(session_dict, spf)
 
 
