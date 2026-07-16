@@ -12,4 +12,7 @@ pip3 install --upgrade evnex || bashio::log.info "Failed to install python evnex
 if [[ -z "${DISABLE_JEMALLOC+x}" ]]; then
   export LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
 fi
-exec python3 -m homeassistant --config /config
+
+# skip-pip-package allows for development of the evnex library otherwise installation of the evnex integration triggers
+# pip to pull the library from pypi.
+exec python3 -m homeassistant --config /config --skip-pip-packages evnex

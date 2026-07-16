@@ -1,10 +1,11 @@
 services:
   homeassistant:
     container_name: home-assistant
-    image: homeassistant/home-assistant:2024.11
+    image: homeassistant/home-assistant:stable
     volumes:
       - ./.docker/data:/config
       - ./custom_components/evnex:/config/custom_components/evnex
+      - ./.docker/config/configuration.yaml:/config/configuration.yaml
       - ./.docker/services:/etc/services.d/home-assistant
     restart: always
     ports:
