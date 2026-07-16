@@ -1,9 +1,31 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "wrong_account": "The credentials belong to a different Evnex account than this entry"
+        },
         "error": {
-            "invalid_credentials": "Invalid credentials"
+            "cannot_connect": "Failed to connect",
+            "invalid_credentials": "Invalid credentials",
+            "invalid_mfa_code": "The code was not accepted. A new code may have been requested; please try again.",
+            "unknown": "Unexpected error"
         },
         "step": {
+            "mfa": {
+                "data": {
+                    "mfa_code": "Code"
+                },
+                "description": "Enter the 6-digit code from {mfa_source}.",
+                "title": "Multi-factor Authentication"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Your Evnex session has expired. Enter the password for {username} to sign in again.",
+                "title": "Reauthenticate Evnex"
+            },
             "user": {
                 "data": {
                     "password": "Password",
@@ -20,13 +42,13 @@
                 "name": "Stop charging session"
             }
         },
-      "number": {
-          "connector_1_maximum_current": {
-            "name": "Connector 1 maximum current"
-          },
-          "connector_2_maximum_current": {
-            "name": "Connector 2 maximum current"
-          }
+        "number": {
+            "connector_1_maximum_current": {
+                "name": "Connector 1 maximum current"
+            },
+            "connector_2_maximum_current": {
+                "name": "Connector 2 maximum current"
+            }
         },
         "sensor": {
             "charger_network_status": {
@@ -68,6 +90,9 @@
                     "suspended_evse": "Charging has been paused by the charge point",
                     "unavailable": "Disabled"
                 }
+            },
+            "connector_supply_power": {
+                "name": "Grid power"
             },
             "connector_temperature": {
                 "name": "Connector temperature"

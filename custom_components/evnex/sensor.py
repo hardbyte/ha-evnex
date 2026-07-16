@@ -548,6 +548,48 @@ class EvnexChargePortConnectorPowerSensor(
         return self.connector_brief.meter.power / 1000
 
 
+class EvnexChargePortConnectorSupplyPowerSensor(
+    EvnexChargePointConnectorEntity, SensorEntity
+):
+    """Grid draw measured by the charger's CT clamp, when installed."""
+
+    entity_description = SensorEntityDescription(
+        key="connector_supply_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    )
+
+    def __init__(
+        self,
+        coordinator: EvnexCoordinator,
+        charger_id: str,
+        org_id: str,
+        connector_id: str = "1",
+    ) -> None:
+        """Initialize the supply power sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            charger_id=charger_id,
+            org_id=org_id,
+            connector_id=connector_id,
+            key=self.entity_description.key,
+        )
+
+    @property
+    def native_value(self):
+        self.connector_brief = self.coordinator.data.connector_brief.get(
+            (self.charger_id, self.connector_id)
+        )
+        if (
+            not self.connector_brief
+            or not self.connector_brief.meter
+            or self.connector_brief.meter.supplyActivePower is None
+        ):
+            return None
+        return self.connector_brief.meter.supplyActivePower / 1000
+
+
 class EvnexChargePortConnectorFrequencySensor(
     EvnexChargePointConnectorEntity, SensorEntity
 ):
@@ -763,6 +805,12 @@ async def async_setup_entry(
                         coordinator, charger_id, org_id_for_charger, connector_id
                     )
                 )
+                if connector_detail_v3.meter.supplyActivePower is not None:
+                    entities.append(
+                        EvnexChargePortConnectorSupplyPowerSensor(
+                            coordinator, charger_id, org_id_for_charger, connector_id
+                        )
+                    )
                 entities.append(
                     EvnexChargePortConnectorFrequencySensor(
                         coordinator, charger_id, org_id_for_charger, connector_id
