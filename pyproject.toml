@@ -16,7 +16,8 @@ dev = [
     "pytest >=8.1.1,<10",
     "ruff<1.0.0,>=0.1.4",
     "pre-commit>=4.3.0",
-    "pre-commit-uv>=4.1.4"
+    "pre-commit-uv>=4.1.4",
+    "pytest-homeassistant-custom-component>=0.13.100",
 ]
 
 [build-system]
@@ -31,3 +32,8 @@ explicit_package_bases = true
 namespace_packages = true
 mypy_path = "."
 
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
