@@ -33,3 +33,29 @@ jobs:
       - uses: hacs/action@main
         with:
           category: integration
+
+  test:
+    name: Tests (HA ${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Minimum supported version (keep in sync with hacs.json)
+          - name: "2025.1"
+            ha-constraint: "homeassistant~=2025.1.0"
+          # Newest HA supported by pytest-homeassistant-custom-component
+          - name: "latest"
+            ha-constraint: "homeassistant"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
+      - name: Install with matrix Home Assistant version
+        run: |
+          uv venv
+          # HA pins pre-release dependencies (e.g. aiohasupervisor betas)
+          uv pip install --prerelease=allow -e . --group dev "${{ matrix.ha-constraint }}"
+      - name: Run tests
+        run: uv run --no-sync pytest tests/
