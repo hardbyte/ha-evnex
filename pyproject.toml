@@ -8,12 +8,12 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "homeassistant >= 2025.1.0",
-    "evnex >= 0.5.0",
+    "evnex >= 0.6.1",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest >=8.1.1,<9",
+    "pytest >=8.1.1,<10",
     "ruff<1.0.0,>=0.1.4",
     "pre-commit>=4.3.0",
     "pre-commit-uv>=4.1.4"

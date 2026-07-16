@@ -7,12 +7,33 @@
         "data": {
           "username": "Username",
           "password": "Password"
-
+        }
+      },
+      "mfa": {
+        "title": "Multi-factor Authentication",
+        "description": "Enter the 6-digit code from {mfa_source}.",
+        "data": {
+          "mfa_code": "Code"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate Evnex",
+        "description": "Your Evnex session has expired. Enter the password for {username} to sign in again.",
+        "data": {
+          "password": "Password"
         }
       }
     },
     "error": {
-      "invalid_credentials": "Invalid credentials"
+      "invalid_credentials": "Invalid credentials",
+      "invalid_mfa_code": "The code was not accepted. A new code may have been requested; please try again.",
+      "cannot_connect": "Failed to connect",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Account is already configured",
+      "reauth_successful": "Re-authentication was successful",
+      "wrong_account": "The credentials belong to a different Evnex account than this entry"
     }
   },
   "options": {
@@ -45,7 +66,7 @@
         "name": "Connector 2 availability"
       }
     },
-     "number": {
+    "number": {
       "connector_1_maximum_current": {
         "name": "Connector 1 maximum current"
       },
@@ -76,9 +97,9 @@
       "session_cost": {
         "name": "Charge cost"
       },
-       "session_time": {
-         "name": "Charge time"
-       },
+      "session_time": {
+        "name": "Charge time"
+      },
       "session_start_time": {
         "name": "Last session start"
       },
@@ -87,18 +108,18 @@
       },
       "connector_status": {
         "name": "Connector status",
-          "state": {
-            "offline": "Offline",
-            "available": "Available",
-            "preparing": "Preparing to charge",
-            "charging": "Charging",
-            "suspended_evse": "Charging has been paused by the charge point",
-            "suspended_ev": "The vehicle is not currently requesting energy",
-            "finishing": "Finished charging - unplug charge point",
-            "reserved": "Reserved",
-            "unavailable": "Disabled",
-            "faulted": "Faulted"
-          }
+        "state": {
+          "offline": "Offline",
+          "available": "Available",
+          "preparing": "Preparing to charge",
+          "charging": "Charging",
+          "suspended_evse": "Charging has been paused by the charge point",
+          "suspended_ev": "The vehicle is not currently requesting energy",
+          "finishing": "Finished charging - unplug charge point",
+          "reserved": "Reserved",
+          "unavailable": "Disabled",
+          "faulted": "Faulted"
+        }
       },
       "connector_temperature": {
         "name": "Connector temperature"
@@ -119,13 +140,16 @@
         "name": "Metered power"
       },
       "connector_voltage_l1": {
-          "name": "Voltage L1"
+        "name": "Voltage L1"
       },
       "connector_voltage_l2": {
-          "name": "Voltage L2"
+        "name": "Voltage L2"
       },
       "connector_voltage_l3": {
-          "name": "Voltage L3"
+        "name": "Voltage L3"
+      },
+      "connector_supply_power": {
+        "name": "Grid power"
       }
     }
   }

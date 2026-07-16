@@ -3,11 +3,10 @@ Custom integration to integrate Evnex with Home Assistant.
 
 """
 
-import os
 import json
 import logging
+import os
 from datetime import timedelta
-from typing import Optional
 
 from evnex.api import Evnex
 from evnex.schema.charge_points import EvnexChargePoint, EvnexChargePointOverrideConfig
@@ -15,6 +14,7 @@ from evnex.schema.v3.charge_points import EvnexChargePointDetail
 
 from evnex.schema.user import EvnexUserDetail
 from evnex.errors import NotAuthorizedException
+from pycognito.exceptions import MFAChallengeException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -29,13 +29,16 @@ from homeassistant.helpers.update_coordinator import (
 from httpx import HTTPStatusError, ReadTimeout
 
 from .const import (
+    CONF_ACCESS_TOKEN,
+    CONF_ID_TOKEN,
+    CONF_REFRESH_TOKEN,
     DATA_CLIENT,
     DATA_COORDINATOR,
     DOMAIN,
     ISSUE_URL,
     PLATFORMS,
-    VERSION,
     TOKEN_FILE_NAME,
+    VERSION,
 )
 from .models import EvnexCoordinatorData
 
@@ -44,49 +47,151 @@ SCAN_INTERVAL = timedelta(minutes=5)
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
-def persist_evnex_auth_tokens(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    id_token=None,
-    refresh_token=None,
-    access_token=None,
+def _read_tokens_from_file(hass: HomeAssistant, entry: ConfigEntry) -> dict | None:
+    """Read auth tokens from the legacy file-based storage. Used only for migration."""
+    config_dir = hass.config.config_dir
+    file = os.path.join(config_dir, TOKEN_FILE_NAME)
+    _LOGGER.debug("Reading legacy session tokens from: %s", file)
+    if os.path.isfile(file):
+        with open(file, "r") as spf:
+            content = spf.read()
+        try:
+            # Tolerate stale trailing bytes after the JSON object (issue #87)
+            sessions, _ = json.JSONDecoder().raw_decode(content)
+            return sessions.get(entry.entry_id)
+        except json.decoder.JSONDecodeError:
+            _LOGGER.error("Failed to decode JSON session data in %s", file)
+            return None
+    return None
+
+
+def _remove_legacy_token_file(hass: HomeAssistant) -> None:
+    """Remove the legacy token file once tokens live in config entry data."""
+    file = os.path.join(hass.config.config_dir, TOKEN_FILE_NAME)
+    if os.path.isfile(file):
+        _LOGGER.info("Removing legacy session token file %s", file)
+        os.unlink(file)
+
+
+def _async_persist_tokens(
+    hass: HomeAssistant, entry: ConfigEntry, evnex_client: Evnex
 ) -> None:
-    config_dir = hass.config.config_dir
-    file = os.path.join(config_dir, TOKEN_FILE_NAME)
-    session_dict = {}
-    if os.path.isfile(file):
-        with open(file, "r") as spf:
-            try:
-                session_dict = json.load(spf)
-            except json.decoder.JSONDecodeError:
-                _LOGGER.error("Failed to load existing session data, overwriting!")
-    _LOGGER.info("Persisting session tokens to %s", file)
-    session_dict[entry.entry_id] = {
-        "id_token": id_token,
-        "refresh_token": refresh_token,
-        "access_token": access_token,
+    """Store the client's current tokens in the config entry if they changed."""
+    tokens = {
+        CONF_ID_TOKEN: evnex_client.id_token,
+        CONF_REFRESH_TOKEN: evnex_client.refresh_token,
+        CONF_ACCESS_TOKEN: evnex_client.access_token,
     }
+    if any(entry.data.get(key) != value for key, value in tokens.items()):
+        hass.config_entries.async_update_entry(entry, data={**entry.data, **tokens})
 
-    with open(os.open(file, os.O_CREAT | os.O_WRONLY | os.O_TRUNC, 0o600), "w") as spf:
-        json.dump(session_dict, spf)
 
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old config entry to a newer version."""
+    _LOGGER.debug(
+        "Migrating Evnex config entry from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
 
-def retrieve_evnex_auth_tokens(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> Optional[dict]:
-    config_dir = hass.config.config_dir
-    file = os.path.join(config_dir, TOKEN_FILE_NAME)
-    _LOGGER.info("Retrieving session token from: %s", file)
-    if os.path.isfile(file):
-        with open(file, "r") as spf:
-            try:
-                sessions = json.load(spf)
-                return sessions.get(entry.entry_id)
-            except json.decoder.JSONDecodeError:
-                _LOGGER.error("Failed to decode JSON session data in %s", file)
+    if config_entry.version == 1:
+        new_data = {**config_entry.data}
+        new_minor_version = config_entry.minor_version
+
+        if new_minor_version == 1:
+            # 1.1 -> 1.2: entity registry unique_id migration
+            # This was previously handled inside async_setup_entry; we handle it here
+            # so the version is correctly recorded before setup proceeds.
+            entity_registry = er.async_get(hass)
+
+            @callback
+            def _update_unique_id_1_2(entry: er.RegistryEntry) -> dict[str, str] | None:
+                replacements = {
+                    Platform.SENSOR.value: {
+                        "org_wide_power_usage_today": "_org_wide_power_usage_today",
+                        "org_wide_charger_sessions_today": "_org_wide_charger_sessions_today",
+                        "org_tier": "_org_tier",
+                        "charger_network_status": "_charger_network_status",
+                        "session_energy": "_session_energy",
+                        "session_cost": "_session_cost",
+                        "session_time": "_session_time",
+                        "session_start_time": "_session_start_time",
+                        "charger_session_history": "_charger_session_history",
+                        "_1_connector_current": "_1_connector_current_l1",
+                        "_1_connector_voltage": "_1_connector_voltage_l1",
+                    },
+                    Platform.SWITCH.value: {
+                        "charger_charge_now_switch": "_charger_charge_now",
+                        "_1_connector_1_availability_switch": "_1_connector_1_availability",
+                    },
+                    Platform.BUTTON.value: {
+                        "charger_stop_session": "_charger_stop_session",
+                    },
+                }
+                uuid_part = entry.unique_id[:36]
+                remainder = entry.unique_id[36:]
+                if (key := remainder) in replacements.get(entry.domain, []):
+                    new_unique_id = entry.unique_id.replace(
+                        f"{uuid_part}{key}",
+                        f"{uuid_part}{replacements[entry.domain][key]}",
+                    )
+                    if existing_entity_id := entity_registry.async_get_entity_id(
+                        entry.domain, entry.platform, new_unique_id
+                    ):
+                        _LOGGER.debug(
+                            "Cannot migrate to unique_id '%s', already exists for '%s'",
+                            new_unique_id,
+                            existing_entity_id,
+                        )
+                        return None
+                    return {"new_unique_id": new_unique_id}
                 return None
 
-    return None
+            await er.async_migrate_entries(
+                hass, config_entry.entry_id, _update_unique_id_1_2
+            )
+            new_minor_version = 2
+
+        if new_minor_version == 2:
+            # 1.2 -> 1.3: migrate auth tokens from evnex_session.json into config entry data
+            _LOGGER.info(
+                "Migrating Evnex auth tokens from file storage to config entry data"
+            )
+            tokens = await hass.async_add_executor_job(
+                _read_tokens_from_file, hass, config_entry
+            )
+            if tokens:
+                new_data[CONF_ID_TOKEN] = tokens.get(CONF_ID_TOKEN)
+                new_data[CONF_REFRESH_TOKEN] = tokens.get(CONF_REFRESH_TOKEN)
+                new_data[CONF_ACCESS_TOKEN] = tokens.get(CONF_ACCESS_TOKEN)
+                _LOGGER.info("Successfully migrated auth tokens into config entry")
+            else:
+                _LOGGER.info(
+                    "No existing token file found; tokens will be populated on next authentication"
+                )
+                new_data.setdefault(CONF_ID_TOKEN, None)
+                new_data.setdefault(CONF_REFRESH_TOKEN, None)
+                new_data.setdefault(CONF_ACCESS_TOKEN, None)
+            new_minor_version = 3
+
+        hass.config_entries.async_update_entry(
+            config_entry, data=new_data, minor_version=new_minor_version
+        )
+
+        # The token file may be shared by several config entries; remove it
+        # only once every entry has its tokens in config entry data.
+        if all(
+            entry.minor_version >= 3
+            for entry in hass.config_entries.async_entries(DOMAIN)
+        ):
+            await hass.async_add_executor_job(_remove_legacy_token_file, hass)
+
+    _LOGGER.debug(
+        "Migration of Evnex config entry to version %s.%s complete",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+    return True
 
 
 async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -105,12 +210,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
 
-    # Load tokens from storage
-    evnex_auth_tokens = await hass.async_add_executor_job(
-        retrieve_evnex_auth_tokens, hass, entry
-    )
-    evnex_auth_tokens = {} if evnex_auth_tokens is None else evnex_auth_tokens
-
+    # Load tokens from config entry data (migrated from file in async_migrate_entry)
     httpx_client = get_async_client(hass)
 
     try:
@@ -118,9 +218,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             Evnex,
             username,
             password,
-            evnex_auth_tokens.get("id_token"),
-            evnex_auth_tokens.get("refresh_token"),
-            evnex_auth_tokens.get("access_token"),
+            entry.data.get(CONF_ID_TOKEN),
+            entry.data.get(CONF_REFRESH_TOKEN),
+            entry.data.get(CONF_ACCESS_TOKEN),
             None,
             httpx_client,
         )
@@ -134,8 +234,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
 
-    await _async_migrate_entries(hass, entry)
-
     async def async_update_data(is_retry: bool = False) -> EvnexCoordinatorData:
         """Fetch data from EVNEX API"""
 
@@ -145,14 +243,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.info("Getting evnex user detail")
             account: EvnexUserDetail = await evnex_client.get_user_detail()
 
-            await hass.async_add_executor_job(
-                persist_evnex_auth_tokens,
-                hass,
-                entry,
-                evnex_client.id_token,
-                evnex_client.refresh_token,
-                evnex_client.access_token,
-            )
+            _async_persist_tokens(hass, entry, evnex_client)
 
             data.user = account
 
@@ -231,23 +322,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     data.charge_point_sessions[charge_point.id] = charge_point_sessions
 
             return data
-        except NotAuthorizedException:
+        except NotAuthorizedException as err:
             if not is_retry:
                 _LOGGER.debug("Refreshing auth and trying again")
-                await hass.async_add_executor_job(evnex_client.authenticate)
-                await hass.async_add_executor_job(
-                    persist_evnex_auth_tokens,
-                    hass,
-                    entry,
-                    evnex_client.id_token,
-                    evnex_client.refresh_token,
-                    evnex_client.access_token,
-                )
+                try:
+                    await hass.async_add_executor_job(evnex_client.authenticate)
+                except MFAChallengeException as mfa_err:
+                    # Password re-auth needs an MFA code, which only the user
+                    # can provide; trigger the reauth flow.
+                    raise ConfigEntryAuthFailed(
+                        "Session expired and account requires MFA to sign in again"
+                    ) from mfa_err
+                except NotAuthorizedException as auth_err:
+                    raise ConfigEntryAuthFailed(
+                        "Stored credentials were rejected"
+                    ) from auth_err
+                _async_persist_tokens(hass, entry, evnex_client)
                 return await async_update_data(is_retry=True)
             _LOGGER.warning(
                 "EVNEX Session Token is invalid and failed attempt to re-login"
             )
-            raise
+            raise ConfigEntryAuthFailed(
+                "Re-authentication succeeded but the API still rejects requests"
+            ) from err
+        except MFAChallengeException as err:
+            # Raised when the client has no usable tokens and signing in with
+            # the stored password requires an MFA code only the user can provide
+            raise ConfigEntryAuthFailed(
+                "Account requires MFA to sign in again"
+            ) from err
         except Exception as err:
             _LOGGER.exception(
                 f"Unhandled exception while updating evnex info {err=} {type(err)}"
@@ -289,66 +392,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-async def _async_migrate_entries(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> bool:
-    """Migrate old entry."""
-    entity_registry = er.async_get(hass)
-
-    @callback
-    def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
-        replacements = {
-            Platform.SENSOR.value: {
-                "org_wide_power_usage_today": "_org_wide_power_usage_today",
-                "org_wide_charger_sessions_today": "_org_wide_charger_sessions_today",
-                "org_tier": "_org_tier",
-                "charger_network_status": "_charger_network_status",
-                "session_energy": "_session_energy",
-                "session_cost": "_session_cost",
-                "session_time": "_session_time",
-                "session_start_time": "_session_start_time",
-                "charger_session_history": "_charger_session_history",
-                "_1_connector_current": "_1_connector_current_l1",
-                "_1_connector_voltage": "_1_connector_voltage_l1",
-            },
-            Platform.SWITCH.value: {
-                "charger_charge_now_switch": "_charger_charge_now",
-                "_1_connector_1_availability_switch": "_1_connector_1_availability",
-            },
-            Platform.BUTTON.value: {
-                "charger_stop_session": "_charger_stop_session",
-            },
-        }
-        uuid_part = entry.unique_id[:36]  # UUID is always 36 chars with dashes
-        remainder = entry.unique_id[36:]
-        if (key := remainder) in replacements.get(entry.domain, []):
-            new_unique_id = entry.unique_id.replace(
-                f"{uuid_part}{key}", f"{uuid_part}{replacements[entry.domain][key]}"
-            )
-            _LOGGER.debug(
-                "Migrating entity '%s' unique_id from '%s' to '%s'",
-                entry.entity_id,
-                entry.unique_id,
-                new_unique_id,
-            )
-            if existing_entity_id := entity_registry.async_get_entity_id(
-                entry.domain, entry.platform, new_unique_id
-            ):
-                _LOGGER.debug(
-                    "Cannot migrate to unique_id '%s', already exists for '%s'",
-                    new_unique_id,
-                    existing_entity_id,
-                )
-                return None
-            return {
-                "new_unique_id": new_unique_id,
-            }
-        return None
-
-    if config_entry.version == 1 and config_entry.minor_version == 1:
-        await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
-        hass.config_entries.async_update_entry(config_entry, minor_version=2)
-
-    return True
