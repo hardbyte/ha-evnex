@@ -41,12 +41,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Minimum supported version (keep in sync with hacs.json)
+          # Minimum supported version (keep in sync with hacs.json).
+          # HA 2025.1 pins a pre-release transitively (aiohasupervisor beta),
+          # which is safe to allow here: ~= can only resolve 2025.1.x stables.
           - name: "2025.1"
             ha-constraint: "homeassistant~=2025.1.0"
-          # Newest HA supported by pytest-homeassistant-custom-component
+            prerelease-flag: "--prerelease=allow"
+          # Newest HA supported by pytest-homeassistant-custom-component.
+          # No prerelease flag, so beta-week HA releases can never be picked.
           - name: "latest"
             ha-constraint: "homeassistant"
+            prerelease-flag: ""
     steps:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v7
@@ -55,7 +60,6 @@ jobs:
       - name: Install with matrix Home Assistant version
         run: |
           uv venv
-          # HA pins pre-release dependencies (e.g. aiohasupervisor betas)
-          uv pip install --prerelease=allow -e . --group dev "${{ matrix.ha-constraint }}"
+          uv pip install ${{ matrix.prerelease-flag }} -e . --group dev "${{ matrix.ha-constraint }}"
       - name: Run tests
         run: uv run --no-sync pytest tests/
