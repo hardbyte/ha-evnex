@@ -2,13 +2,14 @@
     "config": {
         "abort": {
             "already_configured": "Account is already configured",
+            "password_change_required": "Your Evnex account requires a password change before it can sign in. Update it in the Evnex app, then try again.",
             "reauth_successful": "Re-authentication was successful",
             "wrong_account": "The credentials belong to a different Evnex account than this entry"
         },
         "error": {
-            "cannot_connect": "Failed to connect",
             "invalid_credentials": "Invalid credentials",
             "invalid_mfa_code": "The code was not accepted. A new code may have been requested; please try again.",
+            "mfa_expired": "That code expired. We've requested a new challenge - please enter a fresh code.",
             "unknown": "Unexpected error"
         },
         "step": {

@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -24,13 +23,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .coordinator import EvnexConfigEntry
 from .entity import (
     EvnexChargePointConnectorEntity,
     EvnexCoordinator,
     EvnexOrgEntity,
     EvnexChargerEntity,
 )
-from .const import DATA_COORDINATOR, DOMAIN
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -668,13 +667,12 @@ class EvnexChargePortConnectorTemperatureSensor(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EvnexConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
 
-    # client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
+    coordinator = config_entry.runtime_data.coordinator
 
     entities: list[SensorEntity] = []
     if not coordinator.data:

@@ -13,10 +13,10 @@ from homeassistant.components.number import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_UPDATED, DATA_CLIENT, DATA_COORDINATOR, DOMAIN
+from .const import DATA_UPDATED
+from .coordinator import EvnexConfigEntry
 from .entity import EvnexChargePointConnectorEntity
 from evnex.api import Evnex
 from evnex.schema.charge_points import EvnexChargePointLoadSchedule
@@ -37,14 +37,14 @@ class EvnexNumberDescription(NumberEntityDescription):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EvnexConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the number sliders."""
 
     entities = []
-    evnex_api_client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
+    evnex_api_client = config_entry.runtime_data.client
+    coordinator = config_entry.runtime_data.coordinator
     if not coordinator.data or not coordinator.data.user:
         _LOGGER.warning(
             "Number setup: Coordinator data or user data not available yet."

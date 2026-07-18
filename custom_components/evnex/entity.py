@@ -10,15 +10,10 @@ from evnex.schema.org import EvnexOrgBrief
 
 from evnex.models import parse_model
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, NAME
-from .models import EvnexCoordinatorData
-
-type EvnexCoordinator = DataUpdateCoordinator[EvnexCoordinatorData]
+from .coordinator import EvnexCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -8,26 +8,21 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.httpx_client import get_async_client
 
 from evnex.api import Evnex
-from evnex.errors import NotAuthorizedException
-from pycognito.exceptions import (
-    SMSMFAChallengeException,
-    SoftwareTokenMFAChallengeException,
+from evnex.auth import AuthChallenge, EvnexAuth, TokenSet
+from evnex.errors import (
+    ChallengeExpiredError,
+    InvalidChallengeResponseError,
+    InvalidCredentialsError,
+    PasswordChangeRequiredError,
 )
 
-from .const import (
-    CONF_ACCESS_TOKEN,
-    CONF_ID_TOKEN,
-    CONF_MFA_CODE,
-    CONF_REFRESH_TOKEN,
-    DOMAIN,
-)
+from .const import CONF_MFA_CODE, DOMAIN
 
 logger = logging.getLogger(__name__)
 
@@ -49,88 +44,68 @@ class EvnexConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore
     """Handle a config flow for Evnex EV Charger."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     def __init__(self) -> None:
-        self._client: Evnex | None = None
+        self._auth: EvnexAuth | None = None
+        self._challenge: AuthChallenge | None = None
         self._username: str | None = None
         self._password: str | None = None
-        self._mfa_mode: str | None = None
         self._reauth_entry: ConfigEntry | None = None
 
-    async def _async_start_auth(self) -> str | None:
-        """Authenticate with username/password.
-
-        Returns the MFA mode ("TOTP" or "SMS") when the account requires a
-        code to finish signing in, or None when fully authenticated.
-
-        :raises InvalidAuth
-        """
-
-        def _create_client() -> Evnex:
-            # boto3 client construction inside Evnex/Cognito can perform
-            # blocking I/O (credential lookup), so keep it off the event loop
-            return Evnex(
-                username=self._username,
-                password=self._password,
-                httpx_client=get_async_client(self.hass),
-            )
-
-        self._client = await self.hass.async_add_executor_job(_create_client)
-        try:
-            await self.hass.async_add_executor_job(self._client.authenticate)
-        except SoftwareTokenMFAChallengeException:
-            return "TOTP"
-        except SMSMFAChallengeException:
-            return "SMS"
-        except NotAuthorizedException as err:
-            raise InvalidAuth from err
-        return None
-
-    def _show_mfa_form(self, errors: dict[str, str] | None = None) -> FlowResult:
+    def _show_mfa_form(self, errors: dict[str, str] | None = None) -> ConfigFlowResult:
+        assert self._challenge is not None
+        mfa_source = (
+            self._challenge.parameters.get("FRIENDLY_DEVICE_NAME")
+            or "your authenticator app"
+        )
         return self.async_show_form(
             step_id="mfa",
             data_schema=STEP_MFA_DATA_SCHEMA,
             errors=errors,
-            description_placeholders={
-                "mfa_source": "your authenticator app"
-                if self._mfa_mode == "TOTP"
-                else "the SMS we sent you"
-            },
+            description_placeholders={"mfa_source": mfa_source},
         )
 
-    async def _async_create_or_update_entry(self) -> FlowResult:
+    async def _async_finalize(self) -> ConfigFlowResult:
         """Fetch account details and create (or update, on reauth) the entry."""
-        user_data = await self._client.get_user_detail()
+        assert self._auth is not None and self._auth.tokens is not None
+
+        client = Evnex(auth=self._auth, httpx_client=get_async_client(self.hass))
+        user = await client.get_user_detail()
+
+        await self.async_set_unique_id(str(user.id))
 
         data = {
             CONF_USERNAME: self._username,
-            CONF_PASSWORD: self._password,
-            "user_id": str(user_data.id),
-            "default_org_id": self._client.org_id,
-            CONF_ID_TOKEN: self._client.id_token,
-            CONF_REFRESH_TOKEN: self._client.refresh_token,
-            CONF_ACCESS_TOKEN: self._client.access_token,
+            "user_id": str(user.id),
+            "default_org_id": client.org_id,
+            "tokens": self._auth.tokens.to_dict(),
         }
 
         if self._reauth_entry is not None:
-            stored_user_id = self._reauth_entry.data.get("user_id")
-            if stored_user_id is not None and stored_user_id != str(user_data.id):
-                return self.async_abort(reason="wrong_account")
+            # Compare against the entry's unique_id (set to the user id at
+            # creation), not a stored data field: entries created before
+            # user_id was recorded and migrated up to the current version
+            # would otherwise skip this account-identity check entirely.
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            merged_data = {**self._reauth_entry.data, **data}
+            for legacy_key in (
+                CONF_PASSWORD,
+                "id_token",
+                "refresh_token",
+                "access_token",
+            ):
+                merged_data.pop(legacy_key, None)
             return self.async_update_reload_and_abort(
-                self._reauth_entry, data={**self._reauth_entry.data, **data}
+                self._reauth_entry, data=merged_data
             )
 
-        await self.async_set_unique_id(str(user_data.id))
         self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=user_data.name or user_data.email, data=data
-        )
+        return self.async_create_entry(title=user.name or user.email, data=data)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -140,16 +115,20 @@ class EvnexConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore
         self._username = user_input[CONF_USERNAME].lower()
         self._password = user_input[CONF_PASSWORD]
 
-        errors = {}
+        errors: dict[str, str] = {}
         try:
-            if mfa_mode := await self._async_start_auth():
-                self._mfa_mode = mfa_mode
+            self._auth = EvnexAuth()
+            result = await self._auth.start_authentication(
+                self._username, self._password
+            )
+            if isinstance(result, AuthChallenge):
+                self._challenge = result
                 return self._show_mfa_form()
-            return await self._async_create_or_update_entry()
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
+            return await self._async_finalize()
+        except InvalidCredentialsError:
             errors["base"] = "invalid_credentials"
+        except PasswordChangeRequiredError:
+            return self.async_abort(reason="password_change_required")
         except AbortFlow:
             raise
         except Exception:  # pylint: disable=broad-except
@@ -162,26 +141,46 @@ class EvnexConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore
 
     async def async_step_mfa(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Verify a multifactor authentication code."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
+            assert self._auth is not None and self._challenge is not None
             try:
-                await self.hass.async_add_executor_job(
-                    self._client.respond_to_mfa_challenge,
-                    user_input[CONF_MFA_CODE].strip(),
-                    self._mfa_mode,
+                result = await self._auth.respond_to_challenge(
+                    self._challenge, user_input[CONF_MFA_CODE].strip()
                 )
-                return await self._async_create_or_update_entry()
-            except NotAuthorizedException:
-                # Wrong code, or the short-lived Cognito challenge session
-                # expired; restart the challenge so the next attempt can work.
+                if isinstance(result, TokenSet):
+                    return await self._async_finalize()
+                self._challenge = result
+                return self._show_mfa_form()
+            except InvalidChallengeResponseError:
                 errors["base"] = "invalid_mfa_code"
+            except ChallengeExpiredError:
                 try:
-                    await self._async_start_auth()
-                except InvalidAuth:
-                    errors["base"] = "invalid_credentials"
+                    result = await self._auth.start_authentication(
+                        self._username, self._password
+                    )
+                    if isinstance(result, TokenSet):
+                        return await self._async_finalize()
+                    self._challenge = result
+                    errors["base"] = "mfa_expired"
+                except InvalidCredentialsError:
+                    return self.async_show_form(
+                        step_id="user",
+                        data_schema=STEP_USER_DATA_SCHEMA,
+                        errors={"base": "invalid_credentials"},
+                    )
+                except PasswordChangeRequiredError:
+                    return self.async_abort(reason="password_change_required")
+                except AbortFlow:
+                    raise
+                except Exception:  # pylint: disable=broad-except
+                    logger.exception("Unexpected exception restarting authentication")
+                    return self._show_mfa_form({"base": "unknown"})
+            except PasswordChangeRequiredError:
+                return self.async_abort(reason="password_change_required")
             except AbortFlow:
                 raise
             except Exception:  # pylint: disable=broad-except
@@ -190,31 +189,33 @@ class EvnexConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore
 
         return self._show_mfa_form(errors)
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle reauthentication when stored tokens are no longer valid."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self._reauth_entry = self._get_reauth_entry()
         self._username = entry_data[CONF_USERNAME]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm the password (and MFA, if enabled) to re-establish a session."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             self._password = user_input[CONF_PASSWORD]
             try:
-                if mfa_mode := await self._async_start_auth():
-                    self._mfa_mode = mfa_mode
+                self._auth = EvnexAuth()
+                result = await self._auth.start_authentication(
+                    self._username, self._password
+                )
+                if isinstance(result, AuthChallenge):
+                    self._challenge = result
                     return self._show_mfa_form()
-                return await self._async_create_or_update_entry()
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
+                return await self._async_finalize()
+            except InvalidCredentialsError:
                 errors["base"] = "invalid_credentials"
+            except PasswordChangeRequiredError:
+                return self.async_abort(reason="password_change_required")
             except AbortFlow:
                 raise
             except Exception:  # pylint: disable=broad-except
@@ -225,13 +226,5 @@ class EvnexConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             errors=errors,
-            description_placeholders={"username": self._username},
+            description_placeholders={"username": self._username or ""},
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
