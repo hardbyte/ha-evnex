@@ -230,6 +230,36 @@ async def test_reauth_flow_with_mfa(hass: HomeAssistant, mock_evnex) -> None:
     assert "access_token" not in entry.data
 
 
+async def test_reauth_legacy_entry_without_user_id_blocks_wrong_account(
+    hass: HomeAssistant, mock_evnex
+) -> None:
+    """A legacy entry lacking user_id still blocks a different account.
+
+    The account-identity check must key off the entry's unique_id (set at
+    creation) rather than a stored user_id field that pre-user_id entries
+    migrated up to the current version may not have.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="different-user",
+        minor_version=4,
+        # No user_id in data, as for an entry created before it was recorded.
+        data={"username": CREDS["username"], "tokens": make_token_set().to_dict()},
+    )
+    entry.add_to_hass(hass)
+
+    entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    result = await hass.config_entries.flow.async_configure(
+        flows[0]["flow_id"], {"password": "hunter2"}
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
+
+
 async def test_reauth_wrong_account_aborts(hass: HomeAssistant, mock_evnex) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,

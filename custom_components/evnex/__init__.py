@@ -188,7 +188,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EvnexConfigEntry) -> boo
         ISSUE_URL,
     )
 
-    tokens = TokenSet.from_dict(entry.data["tokens"])
+    tokens = TokenSet.from_dict(entry.data.get("tokens") or {})
 
     async def on_token_update(tokens: TokenSet) -> None:
         """Persist rotated tokens to the config entry."""

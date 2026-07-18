@@ -73,6 +73,8 @@ class EvnexConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore
         client = Evnex(auth=self._auth, httpx_client=get_async_client(self.hass))
         user = await client.get_user_detail()
 
+        await self.async_set_unique_id(str(user.id))
+
         data = {
             CONF_USERNAME: self._username,
             "user_id": str(user.id),
@@ -81,21 +83,24 @@ class EvnexConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore
         }
 
         if self._reauth_entry is not None:
-            stored_user_id = self._reauth_entry.data.get("user_id")
-            if stored_user_id is not None and stored_user_id != str(user.id):
-                return self.async_abort(reason="wrong_account")
+            # Compare against the entry's unique_id (set to the user id at
+            # creation), not a stored data field: entries created before
+            # user_id was recorded and migrated up to the current version
+            # would otherwise skip this account-identity check entirely.
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
             merged_data = {**self._reauth_entry.data, **data}
-            merged_data.pop(CONF_PASSWORD, None)
-            merged_data.pop("id_token", None)
-            merged_data.pop("refresh_token", None)
-            merged_data.pop("access_token", None)
+            for legacy_key in (
+                CONF_PASSWORD,
+                "id_token",
+                "refresh_token",
+                "access_token",
+            ):
+                merged_data.pop(legacy_key, None)
             return self.async_update_reload_and_abort(
                 self._reauth_entry, data=merged_data
             )
 
-        await self.async_set_unique_id(str(user.id))
         self._abort_if_unique_id_configured()
-
         return self.async_create_entry(title=user.name or user.email, data=data)
 
     async def async_step_user(
@@ -157,22 +162,23 @@ class EvnexConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore
                     result = await self._auth.start_authentication(
                         self._username, self._password
                     )
+                    if isinstance(result, TokenSet):
+                        return await self._async_finalize()
+                    self._challenge = result
+                    errors["base"] = "mfa_expired"
                 except InvalidCredentialsError:
-                    errors["base"] = "invalid_credentials"
                     return self.async_show_form(
                         step_id="user",
                         data_schema=STEP_USER_DATA_SCHEMA,
-                        errors=errors,
+                        errors={"base": "invalid_credentials"},
                     )
                 except PasswordChangeRequiredError:
                     return self.async_abort(reason="password_change_required")
+                except AbortFlow:
+                    raise
                 except Exception:  # pylint: disable=broad-except
                     logger.exception("Unexpected exception restarting authentication")
                     return self._show_mfa_form({"base": "unknown"})
-                if isinstance(result, TokenSet):
-                    return await self._async_finalize()
-                self._challenge = result
-                errors["base"] = "mfa_expired"
             except PasswordChangeRequiredError:
                 return self.async_abort(reason="password_change_required")
             except AbortFlow:
