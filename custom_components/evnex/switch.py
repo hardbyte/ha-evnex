@@ -2,12 +2,11 @@ import logging
 from typing import Any, Callable, Awaitable
 from dataclasses import dataclass
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
-from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
+from .coordinator import EvnexConfigEntry
 from .entity import (
     EvnexChargePointConnectorEntity,
     EvnexChargerEntity,
@@ -161,14 +160,13 @@ class EvnexChargerAvailabilitySwitch(EvnexChargePointConnectorEntity, SwitchEnti
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EvnexConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the switches."""
     entities = []
-    hass_data = hass.data[DOMAIN][config_entry.entry_id]
-    evnex_api_client = hass_data[DATA_CLIENT]
-    coordinator = hass_data[DATA_COORDINATOR]
+    evnex_api_client = config_entry.runtime_data.client
+    coordinator = config_entry.runtime_data.coordinator
     if not coordinator.data or not coordinator.data.user:
         _LOGGER.warning(
             "Switch setup: Coordinator data or user data not available yet."

@@ -6,7 +6,7 @@ from homeassistant.const import Platform
 NAME = "evnex"
 DOMAIN = "evnex"
 DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "0.8.0b1"
+VERSION = "0.9.0b1"
 ATTRIBUTION = "Data provided by https://evnex.io"
 ISSUE_URL = "https://github.com/hardbyte/ha-evnex/issues"
 
@@ -25,10 +25,6 @@ CONF_REFRESH_TOKEN = "refresh_token"
 CONF_ACCESS_TOKEN = "access_token"
 
 CONF_MFA_CODE = "mfa_code"
-
-# Internal
-DATA_CLIENT = "evnex-client"
-DATA_COORDINATOR = "coordinator"
 
 # Coordinator Data Keys
 

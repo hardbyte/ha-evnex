@@ -3,9 +3,9 @@ from dataclasses import dataclass
 from collections.abc import Awaitable, Callable
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .coordinator import EvnexConfigEntry
 from .entity import EvnexChargerEntity, EvnexCoordinator
 from evnex.api import Evnex
 
@@ -13,7 +13,7 @@ from evnex.schema.user import EvnexUserDetail
 
 from evnex.schema.charge_points import EvnexChargePoint
 
-from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN, CHARGER_SESSION_READY_STATES
+from .const import CHARGER_SESSION_READY_STATES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,9 +42,9 @@ class EvnexButtonSensorEntityDescription(ButtonEntityDescription):
 EVNEX_BUTTONS: tuple[EvnexButtonSensorEntityDescription, ...] = (
     EvnexButtonSensorEntityDescription(
         key="charger_stop_session",
-        available=lambda coordinator,
-        charger_id,
-        connector_id: _is_charger_session_ready(coordinator, charger_id, connector_id),
+        available=lambda coordinator, charger_id, connector_id: (
+            _is_charger_session_ready(coordinator, charger_id, connector_id)
+        ),
         press_fn=lambda evnex_api, charge_point_id, org_id: evnex_api.stop_charge_point(
             charge_point_id=charge_point_id, org_id=org_id
         ),
@@ -54,15 +54,14 @@ EVNEX_BUTTONS: tuple[EvnexButtonSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EvnexConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Evnex button sensor entity."""
 
     entities: list = []
-    hass_data = hass.data[DOMAIN][config_entry.entry_id]
-    evnex_api_client = hass_data[DATA_CLIENT]
-    coordinator = hass_data[DATA_COORDINATOR]
+    evnex_api_client = config_entry.runtime_data.client
+    coordinator = config_entry.runtime_data.coordinator
     if not coordinator.data or not coordinator.data.user:
         _LOGGER.warning(
             "Button setup: Coordinator data or user data not available yet."
