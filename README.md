@@ -26,7 +26,7 @@ Each charger device exposes:
 
 ## Screenshot
 
-![](.github/sensors.png)
+![EV Charger dashboard in Home Assistant](.github/sensors.png)
 
 ## Development
 
