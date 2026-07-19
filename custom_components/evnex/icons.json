@@ -67,6 +67,21 @@
       },
       "connector_power": {
         "default": "mdi:flash-triangle"
+      },
+      "connector_status": {
+        "default": "mdi:ev-station",
+        "state": {
+          "available": "mdi:power-plug",
+          "preparing": "mdi:timer-sand",
+          "charging": "mdi:battery-charging",
+          "suspended_evse": "mdi:pause-circle-outline",
+          "suspended_ev": "mdi:car-electric-outline",
+          "finishing": "mdi:flag-checkered",
+          "reserved": "mdi:calendar-clock",
+          "unavailable": "mdi:power-plug-off",
+          "faulted": "mdi:alert-circle",
+          "offline": "mdi:wifi-off"
+        }
       }
     }
   }
