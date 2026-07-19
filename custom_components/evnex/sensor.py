@@ -397,32 +397,11 @@ class EvnexChargePortConnectorStatusSensor(
             return str.lower(self.connector_brief.ocppStatus)
         return None
 
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        icon = "mdi:help-circle"
-        status = self.native_value
-        if status == "AVAILABLE":
-            icon = "mdi:power-plug-off"
-        elif status == "PREPARING":
-            return "mdi:power-plug-outline"
-        elif (
-            status == "OCCUPIED"
-            or status == "SUSPENDED_EVSE"
-            or status == "SUSPENDED_EV"
-        ):
-            icon = "mdi:power-plug"
-        elif status == "CHARGING":
-            icon = "mdi:battery-positive"
-        elif status == "FINISHING":
-            icon = "mdi:power-plug-off-outline"
-        elif status == "RESERVED":
-            icon = "mdi:timer-sand"
-        elif status == "UNAVAILABLE":
-            icon = "mdi:lan-disconnect"
-        elif status == "FAULTED":
-            icon = "mdi:alert-circle"
-        return icon
+    # Icons come from icons.json (keyed by the lowercase state). A previous
+    # `icon` property compared against uppercase statuses that never matched
+    # the lowercase native_value, so it always fell back to mdi:help-circle
+    # and, because an entity-supplied icon overrides icons.json, hid the state
+    # icons entirely.
 
 
 class EvnexChargePortConnectorVoltageSensor(
