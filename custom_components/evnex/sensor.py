@@ -547,6 +547,46 @@ class EvnexChargePortConnectorPowerSensor(
         return self.connector_brief.meter.power / 1000
 
 
+class EvnexChargePortConnectorEnergyMeterSensor(
+    EvnexChargePointConnectorEntity, SensorEntity
+):
+    """Lifetime energy imported through a connector."""
+
+    entity_description = SensorEntityDescription(
+        key="connector_energy_meter",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    )
+
+    def __init__(
+        self,
+        coordinator: EvnexCoordinator,
+        charger_id: str,
+        org_id: str,
+        connector_id: str = "1",
+    ) -> None:
+        """Initialize the connector energy meter sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            charger_id=charger_id,
+            org_id=org_id,
+            connector_id=connector_id,
+            key=self.entity_description.key,
+        )
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the lifetime imported energy in kWh."""
+        connector = self.coordinator.data.connector_brief.get(
+            (self.charger_id, self.connector_id)
+        )
+        if not connector or not connector.meter:
+            return None
+        return connector.meter.raw_register / 1000
+
+
 class EvnexChargePortConnectorSupplyPowerSensor(
     EvnexChargePointConnectorEntity, SensorEntity
 ):
@@ -800,6 +840,11 @@ async def async_setup_entry(
 
                 entities.append(
                     EvnexChargePortConnectorPowerSensor(
+                        coordinator, charger_id, org_id_for_charger, connector_id
+                    )
+                )
+                entities.append(
+                    EvnexChargePortConnectorEnergyMeterSensor(
                         coordinator, charger_id, org_id_for_charger, connector_id
                     )
                 )

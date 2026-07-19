@@ -140,6 +140,9 @@
       "connector_power": {
         "name": "Metered power"
       },
+      "connector_energy_meter": {
+        "name": "Energy meter"
+      },
       "connector_voltage_l1": {
         "name": "Voltage L1"
       },
