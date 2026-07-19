@@ -1679,7 +1679,7 @@ wheels = [
 
 [[package]]
 name = "evnex"
-version = "0.7.0b2"
+version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
@@ -1694,9 +1694,9 @@ dependencies = [
     { name = "qrcode" },
     { name = "tenacity" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c9/6f/0e8cfa257bbb73f274bb6e65e7192487e1f5f9a0cbbd24246c0f18533e89/evnex-0.7.0b2.tar.gz", hash = "sha256:b6b4743368f89ded9091f5544e9b7e07b7ba997ae738dc02404cea376da2c0d4", size = 117151, upload-time = "2026-07-19T10:15:36.706Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0a/f2/08004b8daf70a4d89fbd588dcee1444a4ed9108e2d524f166be33c472695/evnex-0.7.0.tar.gz", hash = "sha256:fdf2e67075958ab89f093362371a297d3b6f076c41a185c3b676af2fecaa4489", size = 117140, upload-time = "2026-07-19T20:30:47.293Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/71/83/dfd15f7a3cea45bdc49fff321e554016aec8991615839d6bfbbca11c5848/evnex-0.7.0b2-py3-none-any.whl", hash = "sha256:2b8c1c4173f31fc99ba772363ef11cf4f99c7d845864d5e4771b598e8629eae5", size = 42418, upload-time = "2026-07-19T10:15:35.125Z" },
+    { url = "https://files.pythonhosted.org/packages/47/82/055f804045c1d692d4e5c7a22bcbb66e06096a9b9eb65a8d2f4ed6324641/evnex-0.7.0-py3-none-any.whl", hash = "sha256:86f26784537540efa52a378d04fdc92e808018fba3e654e30db3c1de569f3a5f", size = 42393, upload-time = "2026-07-19T20:30:46.026Z" },
 ]
 
 [[package]]
@@ -1726,7 +1726,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "evnex", specifier = ">=0.7.0b2" },
+    { name = "evnex", specifier = ">=0.7.0" },
     { name = "homeassistant", specifier = ">=2025.1.0" },
 ]
 
