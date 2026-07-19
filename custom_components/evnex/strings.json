@@ -51,6 +51,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "connector_plugged_in": {
+        "name": "Plugged in"
+      },
+      "connector_charging": {
+        "name": "Charging"
+      }
+    },
     "button": {
       "charger_stop_session": {
         "name": "Stop charging session"
