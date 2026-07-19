@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from collections.abc import Awaitable, Callable
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import EvnexConfigEntry
@@ -33,18 +34,14 @@ def _is_charger_session_ready(
 
 @dataclass(frozen=True, kw_only=True)
 class EvnexButtonSensorEntityDescription(ButtonEntityDescription):
-    """Describes Mammotion button sensor entity."""
+    """Describes an Evnex button entity."""
 
     press_fn: Callable[[Evnex, str, str], Awaitable[None]]
-    available: Callable[[EvnexCoordinator, str, str], bool]
 
 
 EVNEX_BUTTONS: tuple[EvnexButtonSensorEntityDescription, ...] = (
     EvnexButtonSensorEntityDescription(
         key="charger_stop_session",
-        available=lambda coordinator, charger_id, connector_id: (
-            _is_charger_session_ready(coordinator, charger_id, connector_id)
-        ),
         press_fn=lambda evnex_api, charge_point_id, org_id: evnex_api.stop_charge_point(
             charge_point_id=charge_point_id, org_id=org_id
         ),
@@ -118,10 +115,17 @@ class EvnexChargerButtonEntity(EvnexChargerEntity, ButtonEntity):
         self._attr_translation_key = entity_description.key
 
     async def async_press(self) -> None:
-        """Handle the button press."""
+        """Stop the active charging session.
+
+        Availability is deliberately left to the coordinator rather than gated
+        on the session state: a momentary button that toggled availability logs
+        a spurious "pressed" event every time it reappeared (the unavailable ->
+        unknown state edge). The session-ready check is enforced here instead,
+        raising a clear error when there is nothing to stop.
+        """
+        if not _is_charger_session_ready(self.coordinator, self.charger_id, "1"):
+            raise HomeAssistantError(
+                "Can't stop charging: the charge point has no active session"
+            )
         await self.entity_description.press_fn(self.evnex, self.charger_id, self.org_id)
         await self.coordinator.async_refresh()
-
-    @property
-    def available(self) -> bool:
-        return self.entity_description.available(self.coordinator, self.charger_id, "1")
