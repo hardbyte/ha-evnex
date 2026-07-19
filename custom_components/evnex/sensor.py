@@ -577,14 +577,14 @@ class EvnexChargePortConnectorEnergyMeterSensor(
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the lifetime imported energy in kWh."""
-        self.connector_brief = self.coordinator.data.connector_brief.get(
+        connector = self.coordinator.data.connector_brief.get(
             (self.charger_id, self.connector_id)
         )
-        if not self.connector_brief or not self.connector_brief.meter:
+        if not connector or not connector.meter:
             return None
-        return self.connector_brief.meter.raw_register / 1000
+        return connector.meter.raw_register / 1000
 
 
 class EvnexChargePortConnectorSupplyPowerSensor(
