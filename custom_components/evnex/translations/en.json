@@ -77,6 +77,9 @@
             "connector_power": {
                 "name": "Metered power"
             },
+            "connector_energy_meter": {
+                "name": "Energy meter"
+            },
             "connector_status": {
                 "name": "Connector status",
                 "state": {

@@ -82,6 +82,9 @@
           "faulted": "mdi:alert-circle",
           "offline": "mdi:wifi-off"
         }
+      },
+      "connector_energy_meter": {
+        "default": "mdi:counter"
       }
     }
   }
