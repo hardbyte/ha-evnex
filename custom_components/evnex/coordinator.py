@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
-from httpx import HTTPStatusError, ReadTimeout
+from httpx import HTTPStatusError, ReadTimeout, TransportError
 
 from .const import DOMAIN
 from .models import EvnexCoordinatorData
@@ -131,6 +131,8 @@ class EvnexCoordinator(DataUpdateCoordinator[EvnexCoordinatorData]):
             return data
         except EvnexAuthError as err:
             raise ConfigEntryAuthFailed("Evnex session is no longer valid") from err
+        except TransportError as err:
+            raise UpdateFailed(f"Error talking to the Evnex API: {err!r}") from err
         except Exception as err:
             _LOGGER.exception(
                 f"Unhandled exception while updating evnex info {err=} {type(err)}"
