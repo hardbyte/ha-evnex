@@ -1,5 +1,5 @@
 .docker/data
 .idea
-*/__pycache__
+__pycache__
 .pdm-build
 .venv
