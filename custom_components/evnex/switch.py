@@ -1,10 +1,21 @@
 import logging
-from typing import Any, Callable, Awaitable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import Any
+
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from evnex.api import Evnex
+from evnex.schema.charge_points import EvnexChargePoint
+from evnex.schema.user import EvnexUserDetail
+from evnex.schema.v3.charge_points import (
+    EvnexChargePointConnector,
+)
+from evnex.schema.v3.charge_points import (
+    EvnexChargePointDetail as EvnexChargePointDetailV3,
+)
 
 from .coordinator import EvnexConfigEntry
 from .entity import (
@@ -12,15 +23,6 @@ from .entity import (
     EvnexChargerEntity,
 )
 from .models import EvnexCoordinatorData
-from evnex.api import Evnex
-from evnex.schema.v3.charge_points import (
-    EvnexChargePointConnector,
-    EvnexChargePointDetail as EvnexChargePointDetailV3,
-)
-
-from evnex.schema.user import EvnexUserDetail
-
-from evnex.schema.charge_points import EvnexChargePoint
 
 _LOGGER = logging.getLogger(__name__)
 

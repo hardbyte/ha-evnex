@@ -1,16 +1,17 @@
 import logging
+
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from evnex.models import parse_model
 from evnex.schema.charge_points import (
     EvnexChargePoint,
 )
+from evnex.schema.org import EvnexOrgBrief
 from evnex.schema.v3.charge_points import (
     EvnexChargePointConnector,
     EvnexChargePointDetail,
 )
-from evnex.schema.org import EvnexOrgBrief
-
-from evnex.models import parse_model
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, NAME
 from .coordinator import EvnexCoordinator
