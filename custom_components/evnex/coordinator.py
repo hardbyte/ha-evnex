@@ -6,12 +6,6 @@ import logging
 from dataclasses import dataclass
 from datetime import timedelta
 
-from evnex.api import Evnex
-from evnex.errors import EvnexAuthError
-from evnex.schema.charge_points import EvnexChargePoint, EvnexChargePointOverrideConfig
-from evnex.schema.user import EvnexUserDetail
-from evnex.schema.v3.charge_points import EvnexChargePointDetail
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -20,6 +14,12 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 from httpx import HTTPStatusError, ReadTimeout, TransportError
+
+from evnex.api import Evnex
+from evnex.errors import EvnexAuthError
+from evnex.schema.charge_points import EvnexChargePoint, EvnexChargePointOverrideConfig
+from evnex.schema.user import EvnexUserDetail
+from evnex.schema.v3.charge_points import EvnexChargePointDetail
 
 from .const import DOMAIN
 from .models import EvnexCoordinatorData
@@ -60,7 +60,7 @@ class EvnexCoordinator(DataUpdateCoordinator[EvnexCoordinatorData]):
                 _LOGGER.info(
                     f"Getting evnex charge points for '{org.name}' (Org ID: {org.id}, Slug: {org.slug})"
                 )
-                charge_points: list[EvnexChargePoint] = list()
+                charge_points: list[EvnexChargePoint] = []
                 try:
                     charge_points = await self.client.get_org_charge_points(org.id)
                 except HTTPStatusError:
@@ -134,9 +134,7 @@ class EvnexCoordinator(DataUpdateCoordinator[EvnexCoordinatorData]):
         except TransportError as err:
             raise UpdateFailed(f"Error talking to the Evnex API: {err!r}") from err
         except Exception as err:
-            _LOGGER.exception(
-                f"Unhandled exception while updating evnex info {err=} {type(err)}"
-            )
+            _LOGGER.exception("Unhandled exception while updating evnex info")
             raise UpdateFailed from err
 
 

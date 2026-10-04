@@ -3,10 +3,6 @@
 import datetime
 import logging
 
-from evnex.schema.v3.charge_points import EvnexChargePointSession
-
-from homeassistant.const import UnitOfElectricCurrent, UnitOfTemperature
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -14,23 +10,26 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
-    UnitOfPower,
     UnitOfFrequency,
+    UnitOfPower,
+    UnitOfTemperature,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from evnex.schema.v3.charge_points import EvnexChargePointSession
+
 from .coordinator import EvnexConfigEntry
 from .entity import (
     EvnexChargePointConnectorEntity,
+    EvnexChargerEntity,
     EvnexCoordinator,
     EvnexOrgEntity,
-    EvnexChargerEntity,
 )
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -183,10 +182,11 @@ class EvnexChargerSessionEnergy(EvnexChargerEntity, SensorEntity):
         if sessions and len(sessions) > 0:
             latest_session: EvnexChargePointSession = sessions[0]
             if (
-                latest_session.attributes and latest_session.attributes.endDate is None
-            ):  # Active session
-                if latest_session.attributes.totalPowerUsage is not None:
-                    return latest_session.attributes.totalPowerUsage
+                latest_session.attributes
+                and latest_session.attributes.endDate is None  # Active session
+                and latest_session.attributes.totalPowerUsage is not None
+            ):
+                return latest_session.attributes.totalPowerUsage
         return 0.0
 
 
@@ -217,13 +217,12 @@ class EvnexChargerSessionCost(EvnexChargerEntity, SensorEntity):
         if sessions and len(sessions) > 0:
             latest_session: EvnexChargePointSession = sessions[0]
             if (
-                latest_session.attributes and latest_session.attributes.endDate is None
-            ):  # Active session
-                if (
-                    latest_session.attributes.totalCost
-                    and latest_session.attributes.totalCost.amount is not None
-                ):
-                    return latest_session.attributes.totalCost.amount
+                latest_session.attributes
+                and latest_session.attributes.endDate is None  # Active session
+                and latest_session.attributes.totalCost
+                and latest_session.attributes.totalCost.amount is not None
+            ):
+                return latest_session.attributes.totalCost.amount
         return 0.0
 
 
@@ -257,15 +256,15 @@ class EvnexChargerSessionTime(EvnexChargerEntity, SensorEntity):
                 start_date = latest_session.attributes.startDate
                 if latest_session.attributes.endDate is None:
                     if start_date.tzinfo is None:
-                        start_date = start_date.replace(tzinfo=datetime.timezone.utc)
-                    now = datetime.datetime.now(datetime.timezone.utc)
+                        start_date = start_date.replace(tzinfo=datetime.UTC)
+                    now = datetime.datetime.now(datetime.UTC)
                     return (now - start_date).total_seconds()
                 elif latest_session.attributes.endDate:
                     end_date = latest_session.attributes.endDate
                     if start_date.tzinfo is None:
-                        start_date = start_date.replace(tzinfo=datetime.timezone.utc)
+                        start_date = start_date.replace(tzinfo=datetime.UTC)
                     if end_date.tzinfo is None:
-                        end_date = end_date.replace(tzinfo=datetime.timezone.utc)
+                        end_date = end_date.replace(tzinfo=datetime.UTC)
                     return (end_date - start_date).total_seconds()
         return None
 
@@ -350,15 +349,15 @@ class EvnexChargerSessionHistorySensor(EvnexChargerEntity, SensorEntity):
                 start = attrs.startDate
                 end = attrs.endDate
                 if start.tzinfo is None:
-                    start = start.replace(tzinfo=datetime.timezone.utc)
+                    start = start.replace(tzinfo=datetime.UTC)
                 if end.tzinfo is None:
-                    end = end.replace(tzinfo=datetime.timezone.utc)
+                    end = end.replace(tzinfo=datetime.UTC)
                 session_entry["duration_seconds"] = (end - start).total_seconds()
             elif attrs.startDate and attrs.endDate is None:  # Active session
                 start = attrs.startDate
                 if start.tzinfo is None:
-                    start = start.replace(tzinfo=datetime.timezone.utc)
-                now = datetime.datetime.now(datetime.timezone.utc)
+                    start = start.replace(tzinfo=datetime.UTC)
+                now = datetime.datetime.now(datetime.UTC)
                 session_entry["duration_seconds"] = (now - start).total_seconds()
 
             if attrs.totalCost:
@@ -702,7 +701,7 @@ async def async_setup_entry(
 
     # Org Sensors
     # This Sensor shows org wide weekly summary of powerUsage, charging sessions, cost
-    for org_id in coordinator.data.org_briefs.keys():
+    for org_id in coordinator.data.org_briefs:
         entities.append(
             EvnexOrgWidePowerUsageSensorToday(coordinator=coordinator, org_id=org_id)
         )
@@ -714,7 +713,7 @@ async def async_setup_entry(
         entities.append(EvnexOrgTierSensor(coordinator=coordinator, org_id=org_id))
 
     # Charger and Connector Sensors
-    for charger_id, charger_brief_obj in coordinator.data.charge_point_brief.items():
+    for charger_id in coordinator.data.charge_point_brief:
         org_id_for_charger = charge_point_to_org_map.get(charger_id)
         if org_id_for_charger is None:
             _LOGGER.warning(
