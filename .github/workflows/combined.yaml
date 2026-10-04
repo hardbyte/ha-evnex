@@ -10,7 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Check formatting
-        uses: chartboost/ruff-action@v1
+        uses: astral-sh/ruff-action@v4.1.0
+      - run: ruff check
+      - run: ruff format
 
   ci:
     runs-on: ubuntu-latest
