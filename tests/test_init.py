@@ -7,6 +7,7 @@ from evnex.auth import TokenSet
 from evnex.errors import ReauthenticationRequiredError
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from httpx import HTTPStatusError, ReadTimeout, Request, Response
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.evnex import async_migrate_entry
@@ -120,3 +121,80 @@ async def test_runtime_data_wiring(hass: HomeAssistant) -> None:
 
     assert entry.runtime_data.client is client
     assert entry.runtime_data.coordinator is coordinator
+
+
+def _online_charger_client(override_side_effect) -> MagicMock:
+    """A client with one org and one ONLINE charge point; the override call is driven by the test."""
+    org = MagicMock()
+    org.id, org.name, org.slug = "org-1", "Home", "home"
+    user = MagicMock()
+    user.organisations = [org]
+    charge_point = MagicMock()
+    charge_point.id, charge_point.name = "cp-1", "Garage"
+    detail = MagicMock()
+    detail.data.attributes.networkStatus = "ONLINE"
+    detail.data.attributes.connectors = []
+
+    client = MagicMock()
+    client.get_user_detail = AsyncMock(return_value=user)
+    client.get_org_charge_points = AsyncMock(return_value=[charge_point])
+    client.get_org_insight = AsyncMock(return_value=[])
+    client.get_charge_point_detail_v3 = AsyncMock(return_value=detail)
+    client.get_charge_point_sessions = AsyncMock(return_value=[])
+    client.get_charge_point_override = AsyncMock(side_effect=override_side_effect)
+    return client
+
+
+def _rate_limited() -> HTTPStatusError:
+    request = Request(
+        "POST", "https://client-api.evnex.io/charge-points/cp-1/commands/get-override"
+    )
+    return HTTPStatusError(
+        "Client error '429 Too Many Requests'",
+        request=request,
+        response=Response(429, request=request),
+    )
+
+
+@pytest.mark.parametrize(
+    "error",
+    [_rate_limited(), ReadTimeout("timed out")],
+    ids=["429", "read-timeout"],
+)
+async def test_coordinator_keeps_last_override_when_override_read_fails(
+    hass: HomeAssistant, error: Exception
+) -> None:
+    """A failed override read neither fails the update nor drops the last known override (#115)."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=USER_ID,
+        data={"username": "user@example.com", "tokens": make_token_set().to_dict()},
+    )
+    entry.add_to_hass(hass)
+    previous = MagicMock(chargeNow=True)
+    client = _online_charger_client([previous, error])
+    coordinator = EvnexCoordinator(hass, client, entry)
+
+    coordinator.data = await coordinator._async_update_data()
+    data = await coordinator._async_update_data()
+
+    assert data.charge_point_override["cp-1"] is previous
+    assert "cp-1" in data.charge_point_details  # the rest of the update survived
+
+
+async def test_coordinator_continues_without_override_on_first_failure(
+    hass: HomeAssistant,
+) -> None:
+    """With no previous value, a 429 on the override read still lets the update succeed."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=USER_ID,
+        data={"username": "user@example.com", "tokens": make_token_set().to_dict()},
+    )
+    entry.add_to_hass(hass)
+    coordinator = EvnexCoordinator(hass, _online_charger_client(_rate_limited()), entry)
+
+    data = await coordinator._async_update_data()
+
+    assert "cp-1" not in data.charge_point_override
+    assert "cp-1" in data.charge_point_details
