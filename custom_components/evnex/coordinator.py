@@ -105,7 +105,12 @@ class EvnexCoordinator(DataUpdateCoordinator[EvnexCoordinatorData]):
                         _LOGGER.debug(
                             f"Getting evnex charge point override for '{charge_point.name}'"
                         )
-                        # Don't block data update if a read timeout encountered
+                        # Don't block the data update if the override can't be read: a
+                        # read timeout, or a 429 from its separately rate-limited
+                        # endpoint (#115). Keep the last known override instead of
+                        # dropping it: a missing override reads as charge-now "off",
+                        # which prompts automations to re-send charge-now, and every
+                        # re-send triggers another refresh against the same limit.
                         try:
                             charge_point_override: EvnexChargePointOverrideConfig = (
                                 await self.client.get_charge_point_override(
@@ -115,9 +120,21 @@ class EvnexCoordinator(DataUpdateCoordinator[EvnexCoordinatorData]):
                             data.charge_point_override[charge_point.id] = (
                                 charge_point_override
                             )
-                        except ReadTimeout:
+                        except (ReadTimeout, HTTPStatusError) as err:
+                            previous = (
+                                self.data.charge_point_override.get(charge_point.id)
+                                if self.data is not None
+                                else None
+                            )
+                            if previous is not None:
+                                data.charge_point_override[charge_point.id] = previous
                             _LOGGER.warning(
-                                "Read timeout prevented getting charge point override"
+                                "Could not get charge point override for '%s' (%s); %s",
+                                charge_point.name,
+                                type(err).__name__,
+                                "keeping the last known value"
+                                if previous is not None
+                                else "continuing without it",
                             )
                     else:
                         _LOGGER.debug(
